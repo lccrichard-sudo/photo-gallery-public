@@ -25,6 +25,14 @@ function injectCustomCommentStyles(doc) {
       flex: 1;
       width: auto;
     }
+    .px-1 input {
+      padding: 2px 8px;
+      line-height: 1;
+    }
+    .px-1 textarea {
+      height: 48px;
+      padding: 4px 8px;
+    }
   `;
   doc.head.appendChild(style);
 }

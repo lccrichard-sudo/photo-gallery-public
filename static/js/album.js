@@ -73,8 +73,8 @@ function getLargeUrl(photo) {
 
 function openLightbox(index) {
   currentIndex = index;
-  showCurrentPhoto();
   lightbox.classList.add("active");
+  showCurrentPhoto();
 }
 
 function closeLightbox() {
