@@ -5,7 +5,7 @@ const albumDesc = params.get("desc") || "";
 
 document.getElementById("album-title").textContent = albumTitle;
 document.getElementById("album-desc").textContent = albumDesc;
-document.title = `${albumTitle} | Richard Photography`;
+document.title = `${albumTitle} | Richard's Photography`;
 
 let photos = [];
 let currentIndex = 0;
