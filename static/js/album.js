@@ -12,6 +12,7 @@ let currentIndex = 0;
 
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
+const lightboxDesc = document.getElementById("lightbox-desc");
 const qualitySelect = document.getElementById("quality-select");
 const QUALITY_STORAGE_KEY = "photo-quality";
 
@@ -83,6 +84,9 @@ function showCurrentPhoto() {
   const photo = photos[currentIndex];
   lightboxImg.src = getLargeUrl(photo);
   lightboxImg.alt = photo.title;
+  const desc = (photo.description && photo.description._content) || "";
+  lightboxDesc.textContent = desc;
+  lightboxDesc.style.display = desc ? "block" : "none";
 }
 
 function showPrev() {
