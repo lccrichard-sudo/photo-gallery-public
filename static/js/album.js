@@ -13,6 +13,7 @@ let currentIndex = 0;
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
 const lightboxDesc = document.getElementById("lightbox-desc");
+const lightboxComments = document.getElementById("lightbox-comments");
 const qualitySelect = document.getElementById("quality-select");
 const QUALITY_STORAGE_KEY = "photo-quality";
 
@@ -80,6 +81,12 @@ function closeLightbox() {
   lightbox.classList.remove("active");
 }
 
+function syncCommentsWidth() {
+  if (lightboxImg.offsetWidth > 0) {
+    lightboxComments.style.width = `${lightboxImg.offsetWidth}px`;
+  }
+}
+
 function showCurrentPhoto() {
   const photo = photos[currentIndex];
   lightboxImg.src = getLargeUrl(photo);
@@ -88,7 +95,17 @@ function showCurrentPhoto() {
   lightboxDesc.textContent = desc;
   lightboxDesc.style.display = desc ? "block" : "none";
   updateLightboxComments(photo, albumId, albumTitle);
+
+  if (lightboxImg.complete) {
+    syncCommentsWidth();
+  } else {
+    lightboxImg.onload = syncCommentsWidth;
+  }
 }
+
+window.addEventListener("resize", () => {
+  if (lightbox.classList.contains("active")) syncCommentsWidth();
+});
 
 function showPrev() {
   currentIndex = (currentIndex - 1 + photos.length) % photos.length;

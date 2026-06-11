@@ -282,7 +282,8 @@ main.full-width {
 
 .lightbox-desc {
   display: none;
-  margin-top: 12px;
+  flex-shrink: 0;
+  margin-bottom: 12px;
   padding: 0 20px;
   max-width: 90vw;
   max-height: 10vh;
@@ -294,10 +295,9 @@ main.full-width {
 }
 
 .lightbox-comments {
-  width: 100%;
-  max-width: 700px;
+  width: 90vw;
   margin-top: 16px;
-  padding: 0 20px 20px;
+  padding-bottom: 20px;
 }
 
 .lightbox-close,
