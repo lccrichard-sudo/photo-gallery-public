@@ -223,8 +223,9 @@ main.full-width {
 
 .photo-thumb {
   cursor: pointer;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
+  border-radius: 4px;
   background: #222;
 }
 
