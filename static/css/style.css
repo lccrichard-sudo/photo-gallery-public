@@ -334,3 +334,116 @@ main.full-width {
   color: #666;
   font-size: 0.85rem;
 }
+
+/* 聯絡我 */
+.contact-btn {
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.contact-btn:hover {
+  border-color: #888;
+  color: #fff;
+}
+
+.contact-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1500;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-modal.active {
+  display: flex;
+}
+
+.contact-modal-content {
+  position: relative;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 30px;
+  width: 90%;
+  max-width: 420px;
+}
+
+.contact-modal-content h2 {
+  font-weight: 400;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.contact-form label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.contact-form input,
+.contact-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #111;
+  color: #eee;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.contact-submit {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #eee;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.contact-submit:hover {
+  border-color: #888;
+  color: #fff;
+}
+
+.contact-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.contact-close:hover {
+  color: #fff;
+}
+
+.contact-status {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #999;
+  min-height: 1.2em;
+}

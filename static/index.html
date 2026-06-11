@@ -25,9 +25,27 @@
   </main>
 
   <footer class="site-footer">
-    <p>聯絡我：<a href="mailto:lcc.richard@gmail.com">lcc.richard@gmail.com</a></p>
+    <button id="contact-btn" class="contact-btn">✉ 聯絡我</button>
   </footer>
 
+  <div id="contact-modal" class="contact-modal">
+    <div class="contact-modal-content">
+      <button class="contact-close" id="contact-close">✕</button>
+      <h2>聯絡我</h2>
+      <form id="contact-form" class="contact-form">
+        <label>您的 Email
+          <input type="email" name="email" required placeholder="your@email.com">
+        </label>
+        <label>訊息內容
+          <textarea name="message" rows="5" required placeholder="想說的話…"></textarea>
+        </label>
+        <button type="submit" class="contact-submit">送出</button>
+      </form>
+      <p id="contact-status" class="contact-status"></p>
+    </div>
+  </div>
+
   <script src="js/albums.js"></script>
+  <script src="js/contact.js"></script>
 </body>
 </html>
