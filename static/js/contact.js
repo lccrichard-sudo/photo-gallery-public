@@ -1,5 +1,4 @@
-// TODO: 註冊 https://formspree.io 後，將下方換成你的表單 endpoint
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xlgkwkpp";
 
 const contactBtn = document.getElementById("contact-btn");
 const contactModal = document.getElementById("contact-modal");
