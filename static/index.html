@@ -13,7 +13,10 @@
     <div class="search-box">
       <input type="text" id="search" placeholder="搜尋相簿名稱、說明、照片標籤…">
       <span id="album-count" class="album-count"></span>
-      <button id="build-index-btn" class="index-btn">建立／更新標籤索引</button>
+      <div class="action-row">
+        <button id="build-index-btn" class="index-btn">建立／更新標籤索引</button>
+        <button id="contact-btn" class="contact-btn">✉ 聯絡我</button>
+      </div>
       <span id="index-status" class="index-status"></span>
     </div>
   </header>
@@ -23,10 +26,6 @@
       <p class="loading">載入相簿中…</p>
     </div>
   </main>
-
-  <footer class="site-footer">
-    <button id="contact-btn" class="contact-btn">✉ 聯絡我</button>
-  </footer>
 
   <div id="contact-modal" class="contact-modal">
     <div class="contact-modal-content">
