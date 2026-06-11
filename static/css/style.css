@@ -1,0 +1,309 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #111;
+  color: #eee;
+  font-family: "Helvetica Neue", "Noto Sans TC", -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+body.pseudo-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  z-index: 2000;
+}
+
+a {
+  color: #ccc;
+}
+
+.site-header {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+
+.site-header h1 {
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+}
+
+.subtitle {
+  color: #999;
+  margin-top: 8px;
+}
+
+.search-box {
+  margin: 20px auto 0;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #eee;
+  font-size: 1rem;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.album-count {
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.index-btn {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.index-btn:hover {
+  border-color: #888;
+  color: #fff;
+}
+
+.index-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.index-status {
+  color: #777;
+  font-size: 0.8rem;
+}
+
+.album-header {
+  position: relative;
+  padding-top: 80px;
+}
+
+.back-link {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  text-decoration: none;
+  color: #aaa;
+  font-size: 0.95rem;
+}
+
+.back-link:hover {
+  color: #fff;
+}
+
+.autoplay-controls {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.autoplay-btn,
+.autoplay-speed {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.autoplay-btn:hover,
+.autoplay-speed:hover {
+  border-color: #888;
+  color: #fff;
+}
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+main.full-width {
+  max-width: none;
+}
+
+.loading {
+  text-align: center;
+  color: #777;
+  padding: 60px 0;
+  grid-column: 1 / -1;
+}
+
+/* 首頁相簿格狀牆 */
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.album-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 4px;
+  text-decoration: none;
+  background: #222;
+}
+
+.album-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.album-card:hover img {
+  transform: scale(1.05);
+}
+
+.album-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+}
+
+.album-card-overlay h2 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.album-card-overlay p {
+  font-size: 0.85rem;
+  color: #ccc;
+  margin-top: 4px;
+}
+
+.album-card.hidden {
+  display: none;
+}
+
+/* 相簿內照片格狀牆 */
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.photo-thumb {
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #222;
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.photo-thumb:hover img {
+  transform: scale(1.05);
+}
+
+/* Lightbox */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.lightbox-close,
+.lightbox-nav,
+.lightbox-autoplay {
+  position: absolute;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  cursor: pointer;
+  padding: 10px 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.lightbox-close:hover,
+.lightbox-nav:hover,
+.lightbox-autoplay:hover {
+  opacity: 1;
+}
+
+.lightbox-close {
+  top: 10px;
+  right: 20px;
+  font-size: 1.8rem;
+}
+
+.lightbox-prev {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lightbox-next {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lightbox-autoplay {
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.6rem;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: #666;
+  font-size: 0.85rem;
+}

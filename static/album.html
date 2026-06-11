@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>相簿 | Richard Photography（公開版）</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header album-header">
+    <a href="index.html" class="back-link">← 返回所有相簿</a>
+    <h1 id="album-title">載入中…</h1>
+    <p id="album-desc" class="subtitle"></p>
+    <div class="autoplay-controls">
+      <button id="autoplay-btn" class="autoplay-btn">▶ 自動播放</button>
+      <select id="autoplay-speed" class="autoplay-speed">
+        <option value="1000">1 秒</option>
+        <option value="2000">2 秒</option>
+        <option value="3000" selected>3 秒</option>
+        <option value="5000">5 秒</option>
+        <option value="10000">10 秒</option>
+      </select>
+      <select id="quality-select" class="autoplay-speed">
+        <option value="low">省流量畫質</option>
+        <option value="medium" selected>標準畫質</option>
+        <option value="high">高畫質</option>
+      </select>
+      <button id="fullscreen-btn" class="autoplay-btn">⛶ 全螢幕</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="photos-grid" class="photos-grid">
+      <p class="loading">載入照片中…</p>
+    </div>
+  </main>
+
+  <div id="lightbox" class="lightbox">
+    <button class="lightbox-close" id="lightbox-close">✕</button>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev">‹</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav lightbox-next" id="lightbox-next">›</button>
+    <button class="lightbox-autoplay" id="lightbox-autoplay-btn">▶</button>
+  </div>
+
+  <script src="js/album.js"></script>
+</body>
+</html>

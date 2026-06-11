@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Richard Photography（公開版）</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Richard Photography</h1>
+    <p class="subtitle">公開相簿</p>
+    <div class="search-box">
+      <input type="text" id="search" placeholder="搜尋相簿名稱、說明、照片標籤…">
+      <span id="album-count" class="album-count"></span>
+      <button id="build-index-btn" class="index-btn">建立／更新標籤索引</button>
+      <span id="index-status" class="index-status"></span>
+    </div>
+  </header>
+
+  <main class="full-width">
+    <div id="albums-grid" class="albums-grid">
+      <p class="loading">載入相簿中…</p>
+    </div>
+  </main>
+
+  <script src="js/albums.js"></script>
+</body>
+</html>
