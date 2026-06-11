@@ -1,15 +1,6 @@
-// TODO: 註冊 https://cusdis.com 後，將下方換成你的 App ID
-const CUSDIS_APP_ID = "YOUR_APP_ID";
-
-const lightboxComments = document.getElementById("lightbox-comments");
+const CUSDIS_APP_ID = "0341b085-6ee3-4c6c-834d-8115abbaef20";
 
 function updateLightboxComments(photo, albumIdParam, albumTitleParam) {
-  if (CUSDIS_APP_ID === "YOUR_APP_ID") {
-    lightboxComments.style.display = "none";
-    return;
-  }
-  lightboxComments.style.display = "block";
-
   const pageId = `photo-${photo.id}`;
   const pageUrl = `${window.location.origin}/album.html?id=${albumIdParam}&photo=${photo.id}`;
   const pageTitle = `${albumTitleParam} - ${photo.title || photo.id}`;
