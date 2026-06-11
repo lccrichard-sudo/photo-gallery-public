@@ -15,8 +15,15 @@ USER_ID = os.environ["FLICKR_USER_ID"]
 
 API_URL = "https://api.flickr.com/services/rest/"
 INDEX_PATH = BASE_DIR / "album_tags_index.json"
+DESC_PATH = BASE_DIR / "photo_descriptions.json"
 
 index_status = {"running": False, "done": 0, "total": 0}
+
+
+def load_photo_descriptions():
+    if DESC_PATH.exists():
+        return json.loads(DESC_PATH.read_text(encoding="utf-8"))
+    return {}
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 
@@ -84,12 +91,16 @@ def get_album_tags(album_id):
         if data.get("stat") != "ok":
             break
         photoset = data["photoset"]
+        descriptions = load_photo_descriptions()
         for photo in photoset["photo"]:
             for tag in photo.get("tags", "").split():
                 tags.add(tag)
             desc = photo.get("description", {}).get("_content", "").strip()
             if desc:
                 tags.add(desc)
+            local_desc = descriptions.get(photo["id"], "").strip()
+            if local_desc:
+                tags.add(local_desc)
         if page >= photoset.get("pages", 1):
             break
         page += 1
@@ -154,6 +165,13 @@ def api_album_photos(album_id):
     data = resp.json()
     if data.get("stat") != "ok":
         return jsonify({"error": data.get("message")}), 400
+
+    descriptions = load_photo_descriptions()
+    for photo in data["photoset"]["photo"]:
+        local_desc = descriptions.get(photo["id"])
+        if local_desc:
+            photo["description"] = {"_content": local_desc}
+
     return jsonify(data["photoset"])
 
 
