@@ -269,13 +269,15 @@ main.full-width {
   flex-direction: column;
   align-items: center;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: 95vh;
+  overflow-y: auto;
 }
 
 .lightbox-content img {
   max-width: 90vw;
-  max-height: 78vh;
+  max-height: 65vh;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .lightbox-desc {
@@ -289,6 +291,13 @@ main.full-width {
   font-size: 0.95rem;
   text-align: center;
   white-space: pre-wrap;
+}
+
+.lightbox-comments {
+  width: 100%;
+  max-width: 700px;
+  margin-top: 16px;
+  padding: 0 20px 20px;
 }
 
 .lightbox-close,

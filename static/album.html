@@ -42,6 +42,16 @@
     <div class="lightbox-content">
       <img id="lightbox-img" src="" alt="">
       <p id="lightbox-desc" class="lightbox-desc"></p>
+      <div id="lightbox-comments" class="lightbox-comments">
+        <div id="cusdis_thread"
+          data-host="https://cusdis.com"
+          data-app-id="YOUR_APP_ID"
+          data-page-id="default"
+          data-page-url="default"
+          data-page-title="default"
+          data-theme="dark"
+        ></div>
+      </div>
     </div>
     <button class="lightbox-nav lightbox-next" id="lightbox-next">›</button>
     <button class="lightbox-autoplay" id="lightbox-autoplay-btn">▶</button>
@@ -64,7 +74,9 @@
     </div>
   </div>
 
+  <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
   <script src="js/album.js"></script>
   <script src="js/contact.js"></script>
+  <script src="js/comments.js"></script>
 </body>
 </html>

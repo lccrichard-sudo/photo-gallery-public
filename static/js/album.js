@@ -87,6 +87,7 @@ function showCurrentPhoto() {
   const desc = (photo.description && photo.description._content) || "";
   lightboxDesc.textContent = desc;
   lightboxDesc.style.display = desc ? "block" : "none";
+  updateLightboxComments(photo, albumId, albumTitle);
 }
 
 function showPrev() {
