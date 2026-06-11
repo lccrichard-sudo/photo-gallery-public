@@ -75,7 +75,7 @@ def get_album_tags(album_id):
                 "user_id": USER_ID,
                 "format": "json",
                 "nojsoncallback": 1,
-                "extras": "tags",
+                "extras": "tags,description",
                 "page": page,
                 "per_page": 500,
             },
@@ -87,6 +87,9 @@ def get_album_tags(album_id):
         for photo in photoset["photo"]:
             for tag in photo.get("tags", "").split():
                 tags.add(tag)
+            desc = photo.get("description", {}).get("_content", "").strip()
+            if desc:
+                tags.add(desc)
         if page >= photoset.get("pages", 1):
             break
         page += 1
