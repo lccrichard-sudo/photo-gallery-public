@@ -17,9 +17,6 @@ const qualitySelect = document.getElementById("quality-select");
 const QUALITY_STORAGE_KEY = "photo-quality";
 
 function getThumbUrl(photo) {
-  const quality = qualitySelect.value;
-  if (quality === "low") return photo.url_s || photo.url_m || photo.url_c || photo.url_l;
-  if (quality === "high") return photo.url_c || photo.url_l || photo.url_h || photo.url_m || photo.url_s;
   return photo.url_m || photo.url_c || photo.url_l || photo.url_s;
 }
 
@@ -67,7 +64,10 @@ async function loadPhotos() {
 }
 
 function getLargeUrl(photo) {
-  return photo.url_o || photo.url_k || photo.url_h || photo.url_l || photo.url_c || photo.url_m;
+  const quality = qualitySelect.value;
+  if (quality === "low") return photo.url_m || photo.url_c || photo.url_l || photo.url_s || photo.url_o;
+  if (quality === "high") return photo.url_o || photo.url_k || photo.url_h || photo.url_l || photo.url_c || photo.url_m;
+  return photo.url_c || photo.url_l || photo.url_h || photo.url_m || photo.url_o;
 }
 
 function openLightbox(index) {
@@ -98,6 +98,8 @@ function showNext() {
   currentIndex = (currentIndex + 1) % photos.length;
   showCurrentPhoto();
 }
+
+lightboxImg.addEventListener("contextmenu", (e) => e.preventDefault());
 
 document.getElementById("lightbox-close").addEventListener("click", () => {
   stopAutoplay();
@@ -244,7 +246,7 @@ fullscreenBtn.addEventListener("click", toggleFullscreen);
 
 qualitySelect.addEventListener("change", () => {
   localStorage.setItem(QUALITY_STORAGE_KEY, qualitySelect.value);
-  if (photos.length > 0) renderPhotos();
+  if (lightbox.classList.contains("active")) showCurrentPhoto();
 });
 
 const savedQuality = localStorage.getItem(QUALITY_STORAGE_KEY);
