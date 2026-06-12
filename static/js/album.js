@@ -8,6 +8,7 @@ document.getElementById("album-desc").textContent = albumDesc;
 document.title = `${albumTitle} | Richard's Photography`;
 
 let photos = [];
+let filteredPhotos = [];
 let currentIndex = 0;
 
 const lightbox = document.getElementById("lightbox");
@@ -29,7 +30,12 @@ function renderPhotos() {
     return;
   }
 
-  photos.forEach((photo, index) => {
+  if (filteredPhotos.length === 0) {
+    grid.innerHTML = `<p class="loading">沒有符合的照片</p>`;
+    return;
+  }
+
+  filteredPhotos.forEach((photo, index) => {
     const thumb = getThumbUrl(photo);
     const div = document.createElement("div");
     div.className = "photo-thumb";
@@ -38,6 +44,30 @@ function renderPhotos() {
     grid.appendChild(div);
   });
 }
+
+function matchPhoto(photo, keyword) {
+  const title = (photo.title || "").toLowerCase();
+  const desc = ((photo.description && photo.description._content) || "").toLowerCase();
+  return title.includes(keyword) || desc.includes(keyword);
+}
+
+function updatePhotoCount() {
+  const countSpan = document.getElementById("photo-count");
+  if (photos.length === 0) {
+    countSpan.textContent = "";
+  } else if (filteredPhotos.length === photos.length) {
+    countSpan.textContent = `共 ${photos.length} 張照片`;
+  } else {
+    countSpan.textContent = `符合 ${filteredPhotos.length} / ${photos.length} 張照片`;
+  }
+}
+
+document.getElementById("photo-search").addEventListener("input", (e) => {
+  const keyword = e.target.value.trim().toLowerCase();
+  filteredPhotos = keyword ? photos.filter((photo) => matchPhoto(photo, keyword)) : photos;
+  renderPhotos();
+  updatePhotoCount();
+});
 
 async function loadPhotos() {
   const grid = document.getElementById("photos-grid");
@@ -57,7 +87,9 @@ async function loadPhotos() {
     }
 
     photos = data.photo;
+    filteredPhotos = photos;
     renderPhotos();
+    updatePhotoCount();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
   }
@@ -81,7 +113,7 @@ function closeLightbox() {
 }
 
 function showCurrentPhoto() {
-  const photo = photos[currentIndex];
+  const photo = filteredPhotos[currentIndex];
   lightboxImg.src = getLargeUrl(photo);
   lightboxImg.alt = photo.title;
   const desc = (photo.description && photo.description._content) || "";
@@ -90,12 +122,12 @@ function showCurrentPhoto() {
 }
 
 function showPrev() {
-  currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+  currentIndex = (currentIndex - 1 + filteredPhotos.length) % filteredPhotos.length;
   showCurrentPhoto();
 }
 
 function showNext() {
-  currentIndex = (currentIndex + 1) % photos.length;
+  currentIndex = (currentIndex + 1) % filteredPhotos.length;
   showCurrentPhoto();
 }
 
@@ -153,7 +185,7 @@ function getAutoplayInterval() {
 }
 
 function startAutoplay() {
-  if (autoplayTimer || photos.length === 0) return;
+  if (autoplayTimer || filteredPhotos.length === 0) return;
   autoplayTimer = setInterval(showNext, getAutoplayInterval());
   autoplayBtn.textContent = "⏸ 停止播放";
   lightboxAutoplayBtn.textContent = "⏸";
@@ -176,7 +208,7 @@ function toggleAutoplay() {
 }
 
 autoplayBtn.addEventListener("click", () => {
-  if (photos.length === 0) return;
+  if (filteredPhotos.length === 0) return;
   if (!lightbox.classList.contains("active")) {
     openLightbox(0);
   }
