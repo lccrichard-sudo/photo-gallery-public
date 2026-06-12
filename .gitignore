@@ -2,3 +2,5 @@
 *.log
 __pycache__/
 *.pyc
+flickr_token_cache/
+flickr_request_token.json

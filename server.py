@@ -166,12 +166,6 @@ def api_album_photos(album_id):
     if data.get("stat") != "ok":
         return jsonify({"error": data.get("message")}), 400
 
-    descriptions = load_photo_descriptions()
-    for photo in data["photoset"]["photo"]:
-        local_desc = descriptions.get(photo["id"])
-        if local_desc:
-            photo["description"] = {"_content": local_desc}
-
     return jsonify(data["photoset"])
 
 
