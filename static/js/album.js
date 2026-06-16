@@ -284,4 +284,54 @@ qualitySelect.addEventListener("change", () => {
 const savedQuality = localStorage.getItem(QUALITY_STORAGE_KEY);
 if (savedQuality) qualitySelect.value = savedQuality;
 
+// ── 按讚功能 ──────────────────────────────────────────
+const LIKES_STORAGE_KEY = "photo-liked-ids";
+const likeBtn   = document.getElementById("lightbox-like-btn");
+const likeCount = document.getElementById("like-count");
+
+function getLikedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(LIKES_STORAGE_KEY) || "[]")); }
+  catch { return new Set(); }
+}
+
+function saveLikedSet(set) {
+  localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify([...set]));
+}
+
+function updateLikeUI(count, liked) {
+  likeCount.textContent = count;
+  likeBtn.textContent   = liked ? "♥" : "♡";
+  likeBtn.classList.toggle("liked", liked);
+}
+
+async function loadLikeCount(photoId) {
+  try {
+    const res  = await fetch(`/api/likes/${photoId}`);
+    const data = await res.json();
+    const likedLocally = getLikedSet().has(photoId);
+    updateLikeUI(data.count, data.liked_by_ip || likedLocally);
+  } catch { updateLikeUI(0, false); }
+}
+
+likeBtn.addEventListener("click", async () => {
+  const photo   = filteredPhotos[currentIndex];
+  const photoId = photo.id;
+  try {
+    const res  = await fetch(`/api/likes/${photoId}`, { method: "POST" });
+    const data = await res.json();
+    const liked = getLikedSet();
+    if (data.liked) { liked.add(photoId); } else { liked.delete(photoId); }
+    saveLikedSet(liked);
+    updateLikeUI(data.count, data.liked);
+  } catch {}
+});
+
+// 每次切換照片時更新按讚狀態
+const _origShowCurrentPhoto = showCurrentPhoto;
+showCurrentPhoto = function () {
+  _origShowCurrentPhoto();
+  const photo = filteredPhotos[currentIndex];
+  if (photo) loadLikeCount(photo.id);
+};
+
 loadPhotos();
