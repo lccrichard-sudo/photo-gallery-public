@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import threading
@@ -10,22 +11,50 @@ from flask import Flask, jsonify, request, send_from_directory
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR.parent / ".env")
 
+# ── 按讚儲存：優先用 Upstash Redis，否則用本機 likes.json ──────────
+UPSTASH_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+UPSTASH_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+USE_REDIS = bool(UPSTASH_URL and UPSTASH_TOKEN)
+
 LIKES_PATH = BASE_DIR / "likes.json"
 likes_lock = threading.Lock()
 
-def load_likes():
-    if LIKES_PATH.exists():
-        return json.loads(LIKES_PATH.read_text(encoding="utf-8"))
-    return {}
-
-def save_likes(data):
-    LIKES_PATH.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+def hash_ip(ip):
+    return hashlib.sha256(ip.encode()).hexdigest()[:16]
 
 def get_client_ip():
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.remote_addr
+
+def _redis(*args):
+    resp = requests.post(
+        UPSTASH_URL,
+        headers={"Authorization": f"Bearer {UPSTASH_TOKEN}"},
+        json=list(args),
+        timeout=5,
+    )
+    return resp.json().get("result")
+
+def load_likes_for(photo_id):
+    if USE_REDIS:
+        raw = _redis("HGET", "likes", photo_id)
+        return json.loads(raw) if raw else {"count": 0, "ips": []}
+    with likes_lock:
+        data = json.loads(LIKES_PATH.read_text(encoding="utf-8")) if LIKES_PATH.exists() else {}
+    return data.get(photo_id, {"count": 0, "ips": []})
+
+def save_likes_for(photo_id, entry):
+    if USE_REDIS:
+        _redis("HSET", "likes", photo_id, json.dumps(entry))
+    else:
+        with likes_lock:
+            data = json.loads(LIKES_PATH.read_text(encoding="utf-8")) if LIKES_PATH.exists() else {}
+            data[photo_id] = entry
+            LIKES_PATH.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+# ─────────────────────────────────────────────────────────────────────
 
 API_KEY = os.environ["FLICKR_API_KEY"]
 USER_ID = os.environ["FLICKR_USER_ID"]
@@ -182,32 +211,31 @@ def api_album_photos(album_id):
     data = resp.json()
     if data.get("stat") != "ok":
         return jsonify({"error": data.get("message")}), 400
-
     return jsonify(data["photoset"])
 
 
 @app.route("/api/likes/<photo_id>")
 def api_get_likes(photo_id):
-    likes = load_likes()
-    entry = likes.get(photo_id, {"count": 0, "ips": []})
-    ip = get_client_ip()
-    return jsonify({"count": entry["count"], "liked_by_ip": ip in entry["ips"]})
+    ip_hash = hash_ip(get_client_ip())
+    entry = load_likes_for(photo_id)
+    return jsonify({"count": entry["count"], "liked_by_ip": ip_hash in entry["ips"]})
+
 
 @app.route("/api/likes/<photo_id>", methods=["POST"])
 def api_post_like(photo_id):
-    ip = get_client_ip()
-    with likes_lock:
-        likes = load_likes()
-        entry = likes.setdefault(photo_id, {"count": 0, "ips": []})
-        if ip in entry["ips"]:
-            entry["ips"].remove(ip)
-            entry["count"] = max(0, entry["count"] - 1)
-            save_likes(likes)
-            return jsonify({"count": entry["count"], "liked": False})
-        entry["ips"].append(ip)
+    ip_hash = hash_ip(get_client_ip())
+    entry = load_likes_for(photo_id)
+    if ip_hash in entry["ips"]:
+        entry["ips"].remove(ip_hash)
+        entry["count"] = max(0, entry["count"] - 1)
+        liked = False
+    else:
+        entry["ips"].append(ip_hash)
         entry["count"] += 1
-        save_likes(likes)
-    return jsonify({"count": entry["count"], "liked": True})
+        liked = True
+    save_likes_for(photo_id, entry)
+    return jsonify({"count": entry["count"], "liked": liked})
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8767))
