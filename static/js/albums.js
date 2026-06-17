@@ -66,12 +66,14 @@ function matchAlbum(album, keyword) {
 }
 
 document.getElementById("search").addEventListener("input", (e) => {
-  const keyword = e.target.value.trim().toLowerCase();
-  if (!keyword) {
+  const terms = e.target.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!terms.length) {
     renderAlbums(allAlbums);
     return;
   }
-  const filtered = allAlbums.filter((album) => matchAlbum(album, keyword));
+  const filtered = allAlbums.filter((album) =>
+    terms.every((term) => matchAlbum(album, term))
+  );
   renderAlbums(filtered);
 });
 
