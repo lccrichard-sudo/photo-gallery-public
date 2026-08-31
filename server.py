@@ -205,7 +205,7 @@ def api_album_photos(album_id):
             "user_id": USER_ID,
             "format": "json",
             "nojsoncallback": 1,
-            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description",
+            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags",
         },
     )
     data = resp.json()

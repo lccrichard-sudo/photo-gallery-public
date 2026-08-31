@@ -14,6 +14,7 @@ let currentIndex = 0;
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
 const lightboxDesc = document.getElementById("lightbox-desc");
+const lightboxTags = document.getElementById("lightbox-tags");
 const qualitySelect = document.getElementById("quality-select");
 const QUALITY_STORAGE_KEY = "photo-quality";
 
@@ -119,6 +120,10 @@ function showCurrentPhoto() {
   const desc = (photo.description && photo.description._content) || "";
   lightboxDesc.textContent = desc;
   lightboxDesc.style.display = desc ? "block" : "none";
+
+  const tags = (photo.tags || "").split(/\s+/).filter(Boolean);
+  lightboxTags.innerHTML = tags.map((tag) => `<span class="tag-chip">${tag}</span>`).join("");
+  lightboxTags.style.display = tags.length ? "flex" : "none";
 }
 
 function showPrev() {

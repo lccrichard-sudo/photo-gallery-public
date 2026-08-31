@@ -317,7 +317,11 @@ body.pseudo-fullscreen .lightbox-content img {
 :fullscreen .lightbox-desc,
 :-webkit-full-screen .lightbox-desc,
 :-ms-fullscreen .lightbox-desc,
-body.pseudo-fullscreen .lightbox-desc {
+body.pseudo-fullscreen .lightbox-desc,
+:fullscreen .lightbox-tags,
+:-webkit-full-screen .lightbox-tags,
+:-ms-fullscreen .lightbox-tags,
+body.pseudo-fullscreen .lightbox-tags {
   max-width: 100vw;
 }
 
@@ -339,6 +343,25 @@ body.pseudo-fullscreen .lightbox-desc {
 .lightbox-nav:hover,
 .lightbox-autoplay:hover {
   opacity: 1;
+}
+
+.lightbox-tags {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 20px;
+  max-width: 90vw;
+}
+
+.tag-chip {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .lightbox-like-wrap {
