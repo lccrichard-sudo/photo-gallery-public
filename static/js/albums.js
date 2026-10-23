@@ -1,6 +1,6 @@
 let allAlbums = [];
 let tagsIndex = {};
-let latestCover = "";
+let latestPhotos = [];
 
 async function loadAlbums() {
   const grid = document.getElementById("albums-grid");
@@ -13,8 +13,7 @@ async function loadAlbums() {
     ]);
     try {
       const latest = latestRes && (await latestRes.json());
-      const first = latest && latest.photo && latest.photo[0];
-      if (first) latestCover = first.url_m || first.url_c || first.url_s || "";
+      if (latest && latest.photo) latestPhotos = latest.photo;
     } catch {}
     const data = await albumsRes.json();
     tagsIndex = await indexRes.json();
@@ -41,22 +40,28 @@ function renderAlbums(albums) {
     return;
   }
 
-  if (albums === allAlbums) {
-    const latestCard = document.createElement("a");
-    latestCard.href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近上傳的 10 張相片，並標註所在相簿")}`;
-    latestCard.className = "album-card";
-    latestCard.innerHTML = `
-      ${latestCover ? `<img src="${latestCover}" alt="最新" loading="lazy">` : ""}
-      <div class="album-card-overlay">
-        <h2>最新</h2>
-        <p>最近上傳的 10 張相片</p>
+  if (albums === allAlbums && latestPhotos.length) {
+    const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近上傳的 10 張相片，並標註所在相簿")}`;
+    const tiles = latestPhotos
+      .map((photo) => {
+        const thumb = photo.url_m || photo.url_c || photo.url_s;
+        const albumsLine = (photo.album_titles || []).join("、");
+        return `<a class="latest-tile" href="${href}" title="${albumsLine}">
+          <img src="${thumb}" alt="${photo.title}" loading="lazy">
+          ${albumsLine ? `<span class="photo-album-label">${albumsLine}</span>` : ""}
+        </a>`;
+      })
+      .join("");
+
+    const wrap = document.createElement("section");
+    wrap.className = "latest-marquee";
+    wrap.innerHTML = `
+      <a class="latest-heading" href="${href}">最新 <small>最近上傳的 ${latestPhotos.length} 張相片 ›</small></a>
+      <div class="latest-viewport">
+        <div class="latest-track">${tiles}${tiles}</div>
       </div>
     `;
-    grid.appendChild(latestCard);
-
-    const rowBreak = document.createElement("div");
-    rowBreak.className = "grid-row-break";
-    grid.appendChild(rowBreak);
+    grid.appendChild(wrap);
   }
 
   albums.forEach((album) => {

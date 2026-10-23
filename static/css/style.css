@@ -260,10 +260,77 @@ main.full-width {
   margin-top: 4px;
 }
 
-.grid-row-break {
+/* 「最新」流動展示列 */
+.latest-marquee {
   grid-column: 1 / -1;
-  height: 0;
-  margin-top: -16px;
+  margin-bottom: 8px;
+}
+
+.latest-heading {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+}
+
+.latest-heading small {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #999;
+}
+
+.latest-heading:hover small {
+  color: #ddd;
+}
+
+.latest-viewport {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+}
+
+.latest-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  animation: latest-flow 60s linear infinite;
+}
+
+.latest-viewport:hover .latest-track {
+  animation-play-state: paused;
+}
+
+.latest-tile {
+  position: relative;
+  flex: 0 0 auto;
+  height: 200px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #222;
+}
+
+.latest-tile img {
+  height: 100%;
+  width: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.latest-tile:hover img {
+  transform: scale(1.04);
+}
+
+@keyframes latest-flow {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-50% - 6px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .latest-viewport { overflow-x: auto; }
+  .latest-track { animation: none; }
 }
 
 .album-card.hidden {
