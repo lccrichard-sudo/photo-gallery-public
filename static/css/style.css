@@ -701,3 +701,10 @@ body.pseudo-fullscreen .lightbox-albums {
   color: #999;
   min-height: 1.2em;
 }
+
+/* 全螢幕：按鈕要浮在滿版圖片上面，才點得到 */
+.lightbox-close,
+.lightbox-nav,
+.lightbox-autoplay {
+  z-index: 10;
+}
