@@ -40,7 +40,9 @@ function renderPhotos() {
     const thumb = getThumbUrl(photo);
     const div = document.createElement("div");
     div.className = "photo-thumb";
-    div.innerHTML = `<img src="${thumb}" alt="${photo.title}" loading="lazy">`;
+    const albumsLine = (photo.album_titles || []).join("、");
+    div.innerHTML = `<img src="${thumb}" alt="${photo.title}" loading="lazy">` +
+      (albumsLine ? `<span class="photo-album-label">${albumsLine}</span>` : "");
     div.addEventListener("click", () => openLightbox(index));
     grid.appendChild(div);
   });
@@ -117,7 +119,11 @@ function showCurrentPhoto() {
   const photo = filteredPhotos[currentIndex];
   lightboxImg.src = getLargeUrl(photo);
   lightboxImg.alt = photo.title;
-  const desc = (photo.description && photo.description._content) || "";
+  const baseDesc = (photo.description && photo.description._content) || "";
+  const albumsLine = photo.album_titles
+    ? `所在相簿：${photo.album_titles.length ? photo.album_titles.join("、") : "（未放入相簿）"}`
+    : "";
+  const desc = [baseDesc, albumsLine].filter(Boolean).join("\n");
   lightboxDesc.textContent = desc;
   lightboxDesc.style.display = desc ? "block" : "none";
 

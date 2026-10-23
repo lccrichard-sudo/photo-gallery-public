@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import threading
+import time
 from pathlib import Path
 
 import requests
@@ -194,8 +195,61 @@ def api_search_index():
     return jsonify({})
 
 
+LATEST_COUNT = 10
+LATEST_TTL = 600
+latest_cache = {"at": 0, "data": None}
+
+
+def get_latest_photos():
+    """最近上傳的公開相片，並附上各自所在的相簿名稱。"""
+    now = time.time()
+    if latest_cache["data"] and now - latest_cache["at"] < LATEST_TTL:
+        return latest_cache["data"]
+
+    resp = requests.get(
+        API_URL,
+        params={
+            "method": "flickr.people.getPublicPhotos",
+            "api_key": API_KEY,
+            "user_id": USER_ID,
+            "format": "json",
+            "nojsoncallback": 1,
+            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_upload",
+            "per_page": LATEST_COUNT,
+        },
+    )
+    data = resp.json()
+    if data.get("stat") != "ok":
+        raise RuntimeError(data.get("message"))
+
+    photos = data["photos"]["photo"]
+    for photo in photos:
+        photo["album_titles"] = []
+        ctx = requests.get(
+            API_URL,
+            params={
+                "method": "flickr.photos.getAllContexts",
+                "api_key": API_KEY,
+                "photo_id": photo["id"],
+                "format": "json",
+                "nojsoncallback": 1,
+            },
+        ).json()
+        if ctx.get("stat") == "ok":
+            photo["album_titles"] = [s["title"] for s in ctx.get("set", [])]
+
+    result = {"photo": photos}
+    latest_cache.update(at=now, data=result)
+    return result
+
+
 @app.route("/api/album/<album_id>/photos")
 def api_album_photos(album_id):
+    if album_id == "latest":
+        try:
+            return jsonify(get_latest_photos())
+        except RuntimeError as e:
+            return jsonify({"error": str(e)}), 400
     resp = requests.get(
         API_URL,
         params={

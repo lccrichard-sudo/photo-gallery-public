@@ -236,6 +236,7 @@ main.full-width {
 }
 
 .photo-thumb {
+  position: relative;
   cursor: pointer;
   aspect-ratio: 4 / 3;
   overflow: hidden;
@@ -253,6 +254,21 @@ main.full-width {
 
 .photo-thumb:hover img {
   transform: scale(1.05);
+}
+
+.photo-album-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 10px 8px;
+  font-size: 0.8rem;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 /* Lightbox */

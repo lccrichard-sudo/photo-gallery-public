@@ -1,14 +1,21 @@
 let allAlbums = [];
 let tagsIndex = {};
+let latestCover = "";
 
 async function loadAlbums() {
   const grid = document.getElementById("albums-grid");
 
   try {
-    const [albumsRes, indexRes] = await Promise.all([
+    const [albumsRes, indexRes, latestRes] = await Promise.all([
       fetch("/api/albums"),
       fetch("/api/search_index"),
+      fetch("/api/album/latest/photos").catch(() => null),
     ]);
+    try {
+      const latest = latestRes && (await latestRes.json());
+      const first = latest && latest.photo && latest.photo[0];
+      if (first) latestCover = first.url_m || first.url_c || first.url_s || "";
+    } catch {}
     const data = await albumsRes.json();
     tagsIndex = await indexRes.json();
 
@@ -32,6 +39,20 @@ function renderAlbums(albums) {
   if (albums.length === 0) {
     grid.innerHTML = `<p class="loading">沒有符合的相簿</p>`;
     return;
+  }
+
+  if (albums === allAlbums) {
+    const latestCard = document.createElement("a");
+    latestCard.href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近上傳的 10 張相片，並標註所在相簿")}`;
+    latestCard.className = "album-card";
+    latestCard.innerHTML = `
+      ${latestCover ? `<img src="${latestCover}" alt="最新" loading="lazy">` : ""}
+      <div class="album-card-overlay">
+        <h2>最新</h2>
+        <p>最近上傳的 10 張相片</p>
+      </div>
+    `;
+    grid.appendChild(latestCard);
   }
 
   albums.forEach((album) => {
