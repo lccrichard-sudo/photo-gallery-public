@@ -380,6 +380,25 @@ main.full-width {
   pointer-events: none;
 }
 
+.lightbox-albums {
+  display: none;
+  margin-top: 10px;
+  padding: 0 20px;
+  max-width: 90vw;
+  color: #ccc;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.lightbox-albums a {
+  color: #ffd54a;
+  text-decoration: underline;
+}
+
+.lightbox-albums a:hover {
+  color: #fff;
+}
+
 /* Lightbox */
 .lightbox {
   display: none;

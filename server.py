@@ -221,6 +221,7 @@ def add_album_titles(photo):
     ).json()
     if ctx.get("stat") == "ok":
         photo["album_titles"] = [s["title"] for s in ctx.get("set", [])]
+        photo["album_sets"] = [{"id": s["id"], "title": s["title"]} for s in ctx.get("set", [])]
 
 
 def get_latest_photos():

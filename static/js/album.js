@@ -15,6 +15,7 @@ const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
 const lightboxDesc = document.getElementById("lightbox-desc");
 const lightboxTags = document.getElementById("lightbox-tags");
+const lightboxAlbums = document.getElementById("lightbox-albums");
 const qualitySelect = document.getElementById("quality-select");
 const QUALITY_STORAGE_KEY = "photo-quality";
 
@@ -119,13 +120,19 @@ function showCurrentPhoto() {
   const photo = filteredPhotos[currentIndex];
   lightboxImg.src = getLargeUrl(photo);
   lightboxImg.alt = photo.title;
-  const baseDesc = (photo.description && photo.description._content) || "";
-  const albumsLine = photo.album_titles
-    ? `所在相簿：${photo.album_titles.length ? photo.album_titles.join("、") : "（未放入相簿）"}`
-    : "";
-  const desc = [baseDesc, albumsLine].filter(Boolean).join("\n");
+  const desc = (photo.description && photo.description._content) || "";
   lightboxDesc.textContent = desc;
   lightboxDesc.style.display = desc ? "block" : "none";
+
+  if (photo.album_sets) {
+    const links = photo.album_sets
+      .map((set) => `<a href="album.html?id=${set.id}&title=${encodeURIComponent(set.title)}">${set.title}</a>`)
+      .join("、");
+    lightboxAlbums.innerHTML = `所在相簿：${links || "（未放入相簿）"}`;
+    lightboxAlbums.style.display = "block";
+  } else {
+    lightboxAlbums.style.display = "none";
+  }
 
   const tags = (photo.tags || "").split(/\s+/).filter(Boolean);
   lightboxTags.innerHTML = tags.map((tag) => `<span class="tag-chip">${tag}</span>`).join("");
