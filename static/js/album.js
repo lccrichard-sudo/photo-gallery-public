@@ -66,12 +66,38 @@ function updatePhotoCount() {
   }
 }
 
-document.getElementById("photo-search").addEventListener("input", (e) => {
-  const keyword = e.target.value.trim().toLowerCase();
-  filteredPhotos = keyword ? photos.filter((photo) => matchPhoto(photo, keyword)) : photos;
+const searchInput = document.getElementById("photo-search");
+const sortSelect = document.getElementById("sort-select");
+
+function sortPhotos(list, mode) {
+  const sorted = [...list];
+  const byTaken = (a, b) => (a.datetaken || "").localeCompare(b.datetaken || "");
+  const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "", "zh-Hant", { numeric: true });
+  if (mode === "taken-desc") sorted.sort((a, b) => byTaken(b, a));
+  else if (mode === "taken-asc") sorted.sort(byTaken);
+  else if (mode === "title-asc") sorted.sort(byTitle);
+  else if (mode === "title-desc") sorted.sort((a, b) => byTitle(b, a));
+  else if (mode === "random") {
+    for (let i = sorted.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+    }
+  }
+  return sorted;
+}
+
+function refreshPhotos() {
+  const terms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matched = terms.length
+    ? photos.filter((photo) => terms.every((term) => matchPhoto(photo, term)))
+    : photos;
+  filteredPhotos = sortPhotos(matched, sortSelect.value);
   renderPhotos();
   updatePhotoCount();
-});
+}
+
+searchInput.addEventListener("input", refreshPhotos);
+sortSelect.addEventListener("change", refreshPhotos);
 
 async function loadPhotos() {
   const grid = document.getElementById("photos-grid");
@@ -91,9 +117,7 @@ async function loadPhotos() {
     }
 
     photos = data.photo;
-    filteredPhotos = photos;
-    renderPhotos();
-    updatePhotoCount();
+    refreshPhotos();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
   }

@@ -15,6 +15,17 @@
       <input type="text" id="photo-search" placeholder="搜尋這個相簿的照片標題、說明…">
       <span id="photo-count" class="album-count"></span>
     </div>
+    <div class="sort-row">
+      <label for="sort-select">排列方式</label>
+      <select id="sort-select" class="autoplay-speed">
+        <option value="default">預設順序</option>
+        <option value="taken-desc">拍攝日期：新 → 舊</option>
+        <option value="taken-asc">拍攝日期：舊 → 新</option>
+        <option value="title-asc">標題：A → Z</option>
+        <option value="title-desc">標題：Z → A</option>
+        <option value="random">隨機排列</option>
+      </select>
+    </div>
     <div class="autoplay-controls">
       <button id="autoplay-btn" class="autoplay-btn">▶ 自動播放</button>
       <select id="autoplay-speed" class="autoplay-speed">

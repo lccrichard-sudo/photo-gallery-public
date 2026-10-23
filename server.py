@@ -238,7 +238,7 @@ def get_latest_photos():
             "user_id": USER_ID,
             "format": "json",
             "nojsoncallback": 1,
-            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_upload",
+            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_upload,date_taken",
             "per_page": LATEST_FETCH,
         },
     )
@@ -278,7 +278,7 @@ def api_album_photos(album_id):
             "user_id": USER_ID,
             "format": "json",
             "nojsoncallback": 1,
-            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags",
+            "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_taken",
         },
     )
     data = resp.json()
