@@ -141,6 +141,10 @@ function openLightbox(index) {
 
 function closeLightbox() {
   lightbox.classList.remove("active");
+  if (playAllMode) {
+    playAllMode = false;
+    refreshPhotos();
+  }
 }
 
 function showCurrentPhoto() {
@@ -261,6 +265,56 @@ autoplayBtn.addEventListener("click", () => {
 });
 
 lightboxAutoplayBtn.addEventListener("click", toggleAutoplay);
+
+// ── 播放全部（跨所有相簿）─────────────────────────────
+let playAllMode = false;
+let allPhotosCache = null;
+const autoplayAllBtn = document.getElementById("autoplay-all-btn");
+
+async function loadAllPhotos() {
+  if (allPhotosCache) return allPhotosCache;
+  const albums = await (await fetch("/api/albums")).json();
+  if (!Array.isArray(albums)) throw new Error(albums.error || "無法取得相簿清單");
+  const results = await Promise.all(
+    albums.map((album) =>
+      fetch(`/api/album/${album.id}/photos`)
+        .then((r) => r.json())
+        .then((data) => ({ album, list: data.photo || [] }))
+        .catch(() => ({ album, list: [] }))
+    )
+  );
+  const byId = new Map();
+  results.forEach(({ album, list }) => {
+    const title = album.title._content || album.title;
+    list.forEach((photo) => {
+      if (!byId.has(photo.id)) {
+        byId.set(photo.id, { ...photo, album_sets: [] });
+      }
+      byId.get(photo.id).album_sets.push({ id: album.id, title });
+    });
+  });
+  allPhotosCache = [...byId.values()];
+  return allPhotosCache;
+}
+
+autoplayAllBtn.addEventListener("click", async () => {
+  autoplayAllBtn.disabled = true;
+  autoplayAllBtn.textContent = "載入全部照片中…";
+  try {
+    const all = await loadAllPhotos();
+    if (all.length === 0) return;
+    stopAutoplay();
+    playAllMode = true;
+    filteredPhotos = all;
+    openLightbox(0);
+    startAutoplay();
+  } catch (err) {
+    alert(`載入失敗：${err.message}`);
+  } finally {
+    autoplayAllBtn.disabled = false;
+    autoplayAllBtn.textContent = "▶ 播放全部";
+  }
+});
 
 autoplaySpeedSelect.addEventListener("change", () => {
   if (!autoplayTimer) return;
