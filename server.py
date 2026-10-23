@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
@@ -195,13 +196,35 @@ def api_search_index():
     return jsonify({})
 
 
-LATEST_COUNT = 10
+LATEST_MIN_COUNT = 10
+LATEST_FETCH = 500
 LATEST_TTL = 600
+TAIPEI_OFFSET = 8 * 3600
 latest_cache = {"at": 0, "data": None}
 
 
+def upload_day(photo):
+    return (int(photo["dateupload"]) + TAIPEI_OFFSET) // 86400
+
+
+def add_album_titles(photo):
+    photo["album_titles"] = []
+    ctx = requests.get(
+        API_URL,
+        params={
+            "method": "flickr.photos.getAllContexts",
+            "api_key": API_KEY,
+            "photo_id": photo["id"],
+            "format": "json",
+            "nojsoncallback": 1,
+        },
+    ).json()
+    if ctx.get("stat") == "ok":
+        photo["album_titles"] = [s["title"] for s in ctx.get("set", [])]
+
+
 def get_latest_photos():
-    """最近上傳的公開相片，並附上各自所在的相簿名稱。"""
+    """最近一次上傳（台北時間同一天）的公開相片，不足 10 張就補到 10 張，並附上所在相簿名稱。"""
     now = time.time()
     if latest_cache["data"] and now - latest_cache["at"] < LATEST_TTL:
         return latest_cache["data"]
@@ -215,28 +238,23 @@ def get_latest_photos():
             "format": "json",
             "nojsoncallback": 1,
             "extras": "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_upload",
-            "per_page": LATEST_COUNT,
+            "per_page": LATEST_FETCH,
         },
     )
     data = resp.json()
     if data.get("stat") != "ok":
         raise RuntimeError(data.get("message"))
 
-    photos = data["photos"]["photo"]
-    for photo in photos:
-        photo["album_titles"] = []
-        ctx = requests.get(
-            API_URL,
-            params={
-                "method": "flickr.photos.getAllContexts",
-                "api_key": API_KEY,
-                "photo_id": photo["id"],
-                "format": "json",
-                "nojsoncallback": 1,
-            },
-        ).json()
-        if ctx.get("stat") == "ok":
-            photo["album_titles"] = [s["title"] for s in ctx.get("set", [])]
+    all_photos = data["photos"]["photo"]
+    if all_photos:
+        newest_day = upload_day(all_photos[0])
+        last_batch = [p for p in all_photos if upload_day(p) == newest_day]
+    else:
+        last_batch = []
+    photos = last_batch if len(last_batch) > LATEST_MIN_COUNT else all_photos[:LATEST_MIN_COUNT]
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(add_album_titles, photos))
 
     result = {"photo": photos}
     latest_cache.update(at=now, data=result)

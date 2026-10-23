@@ -41,7 +41,7 @@ function renderAlbums(albums) {
   }
 
   if (albums === allAlbums && latestPhotos.length) {
-    const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近上傳的 10 張相片，並標註所在相簿")}`;
+    const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近一次上傳的相片（至少 10 張），並標註所在相簿")}`;
     const tiles = latestPhotos
       .map((photo) => {
         const thumb = photo.url_m || photo.url_c || photo.url_s;
@@ -58,7 +58,7 @@ function renderAlbums(albums) {
     wrap.innerHTML = `
       <a class="latest-heading" href="${href}">最新 <small>最近上傳的 ${latestPhotos.length} 張相片 ›</small></a>
       <div class="latest-viewport">
-        <div class="latest-track">${tiles}${tiles}</div>
+        <div class="latest-track" style="animation-duration: ${Math.max(40, latestPhotos.length * 6)}s">${tiles}${tiles}</div>
       </div>
     `;
     grid.appendChild(wrap);
