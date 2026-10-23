@@ -53,6 +53,10 @@ function renderAlbums(albums) {
       </div>
     `;
     grid.appendChild(latestCard);
+
+    const rowBreak = document.createElement("div");
+    rowBreak.className = "grid-row-break";
+    grid.appendChild(rowBreak);
   }
 
   albums.forEach((album) => {

@@ -260,6 +260,12 @@ main.full-width {
   margin-top: 4px;
 }
 
+.grid-row-break {
+  grid-column: 1 / -1;
+  height: 0;
+  margin-top: -16px;
+}
+
 .album-card.hidden {
   display: none;
 }
