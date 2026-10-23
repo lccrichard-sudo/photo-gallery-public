@@ -72,9 +72,12 @@ const sortSelect = document.getElementById("sort-select");
 function sortPhotos(list, mode) {
   const sorted = [...list];
   const byTaken = (a, b) => (a.datetaken || "").localeCompare(b.datetaken || "");
+  const byUpload = (a, b) => Number(a.dateupload || 0) - Number(b.dateupload || 0);
   const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "", "zh-Hant", { numeric: true });
   if (mode === "taken-desc") sorted.sort((a, b) => byTaken(b, a));
   else if (mode === "taken-asc") sorted.sort(byTaken);
+  else if (mode === "upload-desc") sorted.sort((a, b) => byUpload(b, a));
+  else if (mode === "upload-asc") sorted.sort(byUpload);
   else if (mode === "title-asc") sorted.sort(byTitle);
   else if (mode === "title-desc") sorted.sort((a, b) => byTitle(b, a));
   else if (mode === "random") {
