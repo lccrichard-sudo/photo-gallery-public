@@ -117,6 +117,24 @@ def api_albums():
     return jsonify(albums)
 
 
+@app.route("/api/photo_total")
+def api_photo_total():
+    data = requests.get(
+        API_URL,
+        params={
+            "method": "flickr.people.getPublicPhotos",
+            "api_key": API_KEY,
+            "user_id": USER_ID,
+            "format": "json",
+            "nojsoncallback": 1,
+            "per_page": 1,
+        },
+    ).json()
+    if data.get("stat") != "ok":
+        return jsonify({"error": data.get("message")}), 400
+    return jsonify({"total": int(data["photos"]["total"])})
+
+
 def get_album_tags(album_id):
     tags = set()
     page = 1

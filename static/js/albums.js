@@ -24,7 +24,14 @@ async function loadAlbums() {
     }
 
     allAlbums = data;
-    document.getElementById("album-count").textContent = `共 ${allAlbums.length} 個相簿`;
+    const countEl = document.getElementById("album-count");
+    countEl.textContent = `共 ${allAlbums.length} 個相簿`;
+    fetch("/api/photo_total")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.total) countEl.textContent = `共 ${allAlbums.length} 個相簿、${d.total} 張相片`;
+      })
+      .catch(() => {});
     refreshAlbums();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;

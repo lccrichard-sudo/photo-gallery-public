@@ -140,6 +140,15 @@ async function handleApi(request, env, url) {
 
   if (path === "/api/albums") return json(await getAllAlbums(env));
 
+  if (path === "/api/photo_total") {
+    const data = await flickr(env, "flickr.people.getPublicPhotos", {
+      user_id: env.FLICKR_USER_ID,
+      per_page: 1,
+    });
+    if (data.stat !== "ok") throw new Error(data.message);
+    return json({ total: Number(data.photos.total) });
+  }
+
   if (path === "/api/search_index") {
     return json(await buildSearchIndex(env).catch(() => tagsIndex), 200, {
       "Cache-Control": "public, max-age=300",
