@@ -1,0 +1,14 @@
+{
+  "name": "richard-photography",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "../static",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "kv_namespaces": [{ "binding": "LIKES" }],
+  "vars": {
+    "FLICKR_USER_ID": "21485339@N07"
+  }
+}
