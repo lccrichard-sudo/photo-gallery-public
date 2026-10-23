@@ -45,6 +45,43 @@ a {
   margin: 12px auto 0;
 }
 
+.title-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.title-row .visit-badge {
+  margin: 0;
+}
+
+.controls-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.controls-row input {
+  flex: 1 1 240px;
+  max-width: 320px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #eee;
+  font-size: 1rem;
+}
+
+.controls-row input:focus {
+  outline: none;
+  border-color: #888;
+}
+
 .search-box {
   margin: 20px auto 0;
   max-width: 400px;
@@ -81,7 +118,6 @@ a {
 }
 
 .index-btn {
-  margin-top: 4px;
   padding: 6px 14px;
   border-radius: 4px;
   border: 1px solid #444;
