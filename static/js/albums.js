@@ -25,13 +25,13 @@ async function loadAlbums() {
 
     allAlbums = data;
     document.getElementById("album-count").textContent = `共 ${allAlbums.length} 個相簿`;
-    renderAlbums(allAlbums);
+    refreshAlbums();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
   }
 }
 
-function renderAlbums(albums) {
+function renderAlbums(albums, { showLatest = true } = {}) {
   const grid = document.getElementById("albums-grid");
   grid.innerHTML = "";
 
@@ -40,7 +40,7 @@ function renderAlbums(albums) {
     return;
   }
 
-  if (albums === allAlbums && latestPhotos.length) {
+  if (showLatest && latestPhotos.length) {
     const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近一次上傳的相片（至少 10 張），並標註所在相簿")}`;
     const tiles = latestPhotos
       .map((photo) => {
@@ -95,17 +95,35 @@ function matchAlbum(album, keyword) {
   return tags.some((tag) => tag.toLowerCase().includes(keyword));
 }
 
-document.getElementById("search").addEventListener("input", (e) => {
-  const terms = e.target.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (!terms.length) {
-    renderAlbums(allAlbums);
-    return;
-  }
-  const filtered = allAlbums.filter((album) =>
-    terms.every((term) => matchAlbum(album, term))
-  );
-  renderAlbums(filtered);
-});
+const searchInput = document.getElementById("search");
+const sortSelect = document.getElementById("sort-select");
+
+function sortAlbums(list, mode) {
+  const sorted = [...list];
+  const title = (a) => a.title._content || "";
+  const byTitle = (a, b) => title(a).localeCompare(title(b), "zh-Hant", { numeric: true });
+  const num = (key) => (a, b) => Number(a[key] || 0) - Number(b[key] || 0);
+  if (mode === "title-asc") sorted.sort(byTitle);
+  else if (mode === "title-desc") sorted.sort((a, b) => byTitle(b, a));
+  else if (mode === "photos-desc") sorted.sort((a, b) => num("photos")(b, a));
+  else if (mode === "photos-asc") sorted.sort(num("photos"));
+  else if (mode === "update-desc") sorted.sort((a, b) => num("date_update")(b, a));
+  else if (mode === "update-asc") sorted.sort(num("date_update"));
+  else if (mode === "create-desc") sorted.sort((a, b) => num("date_create")(b, a));
+  else if (mode === "create-asc") sorted.sort(num("date_create"));
+  return sorted;
+}
+
+function refreshAlbums() {
+  const terms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matched = terms.length
+    ? allAlbums.filter((album) => terms.every((term) => matchAlbum(album, term)))
+    : allAlbums;
+  renderAlbums(sortAlbums(matched, sortSelect.value), { showLatest: !terms.length });
+}
+
+searchInput.addEventListener("input", refreshAlbums);
+sortSelect.addEventListener("change", refreshAlbums);
 
 const buildBtn = document.getElementById("build-index-btn");
 const indexStatusEl = document.getElementById("index-status");

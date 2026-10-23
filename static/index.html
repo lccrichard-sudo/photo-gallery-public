@@ -15,6 +15,17 @@
     </div>
     <div class="controls-row">
       <input type="text" id="search" placeholder="搜尋相簿名稱、說明、照片標籤…" title="多條件用空格分開">
+      <select id="sort-select" class="autoplay-speed" title="排列方式">
+        <option value="default">排列：預設順序</option>
+        <option value="title-asc">相簿名稱（A→Z）</option>
+        <option value="title-desc">相簿名稱（Z→A）</option>
+        <option value="photos-desc">相片張數（多→少）</option>
+        <option value="photos-asc">相片張數（少→多）</option>
+        <option value="update-desc">最近更新（新→舊）</option>
+        <option value="update-asc">最近更新（舊→新）</option>
+        <option value="create-desc">建立日期（新→舊）</option>
+        <option value="create-asc">建立日期（舊→新）</option>
+      </select>
       <button id="build-index-btn" class="index-btn">建立／更新標籤索引</button>
       <button id="contact-btn" class="contact-btn">✉ 聯絡我</button>
       <span id="index-status" class="index-status"></span>
