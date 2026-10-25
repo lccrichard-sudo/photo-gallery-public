@@ -121,12 +121,73 @@ function sortAlbums(list, mode) {
   return sorted;
 }
 
+// ── 符合條件的相片（跨全部相簿）───────────────────────
+let allPhotosPromise = null;
+
+function loadAllPhotosForSearch() {
+  if (allPhotosPromise) return allPhotosPromise;
+  allPhotosPromise = Promise.all(
+    allAlbums.map((album) =>
+      fetch(`/api/album/${album.id}/photos`)
+        .then((r) => r.json())
+        .then((data) => ({ album, list: data.photo || [] }))
+        .catch(() => ({ album, list: [] }))
+    )
+  ).then((results) => {
+    const byId = new Map();
+    results.forEach(({ album, list }) => {
+      const title = album.title._content || "";
+      list.forEach((photo) => {
+        if (!byId.has(photo.id)) byId.set(photo.id, { ...photo, albumTitles: [] });
+        byId.get(photo.id).albumTitles.push(title);
+      });
+    });
+    return [...byId.values()];
+  });
+  return allPhotosPromise;
+}
+
+function photoText(photo) {
+  const desc = (photo.description && photo.description._content) || "";
+  return `${photo.title || ""} ${desc} ${photo.tags || ""} ${photo.albumTitles.join(" ")}`.toLowerCase();
+}
+
+const photoMatchBar = document.getElementById("photo-match-bar");
+let photoMatchSeq = 0;
+
+async function updatePhotoMatchBar(terms) {
+  const seq = ++photoMatchSeq;
+  if (!terms.length) {
+    photoMatchBar.style.display = "none";
+    return;
+  }
+  try {
+    const photos = await loadAllPhotosForSearch();
+    if (seq !== photoMatchSeq) return;
+    const count = photos.filter((p) => {
+      const text = photoText(p);
+      return terms.every((t) => text.includes(t));
+    }).length;
+    if (!count) {
+      photoMatchBar.style.display = "none";
+      return;
+    }
+    const q = terms.join(" ");
+    photoMatchBar.href = `album.html?id=search&q=${encodeURIComponent(q)}`;
+    photoMatchBar.textContent = `找到 ${count} 張符合「${q}」的相片，全部顯示 ›`;
+    photoMatchBar.style.display = "block";
+  } catch {
+    photoMatchBar.style.display = "none";
+  }
+}
+
 function refreshAlbums() {
   const terms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matched = terms.length
     ? allAlbums.filter((album) => terms.every((term) => matchAlbum(album, term)))
     : allAlbums;
   renderAlbums(sortAlbums(matched, sortSelect.value), { showLatest: !terms.length });
+  updatePhotoMatchBar(terms);
 }
 
 searchInput.addEventListener("input", refreshAlbums);
