@@ -188,9 +188,125 @@ async function handleApi(request, env, url) {
   return json({ error: "not found" }, 404);
 }
 
+// ── 縮網址：/photo/<關鍵字> ────────────────────────────
+const LINK_PREFIX = "link:";
+const SLUG_RE = /^[a-z0-9][a-z0-9_-]{0,39}$/;
+
+const ADMIN_HTML = `<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>縮網址管理</title>
+<style>
+body{font-family:system-ui,"Microsoft JhengHei",sans-serif;background:#111;color:#eee;margin:0;padding:20px;max-width:760px;margin:0 auto}
+h1{font-size:1.3rem}input,button{font:inherit;padding:8px 10px;border-radius:6px;border:1px solid #555;background:#222;color:#eee}
+button{cursor:pointer;background:#d4af37;color:#111;border:0;font-weight:600}button.del{background:#733;color:#fff}
+.row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}.row input{flex:1;min-width:140px}
+table{width:100%;border-collapse:collapse;margin-top:16px}td,th{padding:8px;border-bottom:1px solid #333;text-align:left;word-break:break-all}
+.msg{margin:8px 0;color:#d4af37;min-height:1.2em}
+</style></head><body>
+<h1>縮網址管理</h1>
+<div class="row"><input type="password" id="pw" placeholder="管理密碼"><button id="login">登入</button></div>
+<div id="panel" style="display:none">
+<div class="row"><span style="padding:8px 0">/photo/</span><input id="slug" placeholder="關鍵字（英數、減號）" style="max-width:200px"><input id="target" placeholder="原網址 https://…"><button id="save">建立／更新</button></div>
+<div class="msg" id="msg"></div>
+<table><thead><tr><th>短網址</th><th>原網址</th><th>點擊</th><th></th></tr></thead><tbody id="list"></tbody></table>
+</div>
+<script>
+const $=(id)=>document.getElementById(id);
+let pw=sessionStorage.getItem("linkpw")||"";
+const api=(method,body)=>fetch("/api/links",{method,headers:{Authorization:"Bearer "+pw,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}).then(async r=>({ok:r.ok,data:await r.json().catch(()=>({}))}));
+async function load(){
+  const r=await api("GET");
+  if(!r.ok){$("panel").style.display="none";$("msg").textContent="";if(pw)alert("密碼錯誤");return;}
+  sessionStorage.setItem("linkpw",pw);$("panel").style.display="block";
+  const tb=$("list");tb.innerHTML="";
+  r.data.links.forEach(l=>{
+    const tr=document.createElement("tr");
+    const short=location.origin+"/photo/"+l.slug;
+    const a=document.createElement("a");a.href=short;a.textContent="/photo/"+l.slug;a.style.color="#d4af37";a.target="_blank";
+    const c1=document.createElement("td");c1.appendChild(a);
+    const cp=document.createElement("button");cp.textContent="複製";cp.style.marginLeft="6px";cp.onclick=()=>{navigator.clipboard.writeText(short);$("msg").textContent="已複製 "+short};c1.appendChild(cp);
+    const c2=document.createElement("td");c2.textContent=l.url;
+    const c3=document.createElement("td");c3.textContent=l.clicks||0;
+    const c4=document.createElement("td");const d=document.createElement("button");d.className="del";d.textContent="刪除";
+    d.onclick=async()=>{if(confirm("刪除 /photo/"+l.slug+" ？")){await api("DELETE",{slug:l.slug});load();}};c4.appendChild(d);
+    tr.append(c1,c2,c3,c4);tb.appendChild(tr);
+  });
+}
+$("login").onclick=()=>{pw=$("pw").value;load();};
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("login").click();});
+$("save").onclick=async()=>{
+  const r=await api("POST",{slug:$("slug").value,url:$("target").value});
+  $("msg").textContent=r.ok?"已儲存："+location.origin+"/photo/"+r.data.slug:(r.data.error||"失敗");
+  if(r.ok){$("slug").value="";$("target").value="";load();}
+};
+if(pw)load();
+</script></body></html>`;
+
+async function handleLinks(request, env) {
+  const auth = request.headers.get("Authorization") || "";
+  if (!env.ADMIN_PASSWORD || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
+    return json({ error: "unauthorized" }, 401);
+  }
+  if (request.method === "GET") {
+    const list = await env.LIKES.list({ prefix: LINK_PREFIX });
+    const links = await Promise.all(
+      list.keys.map(async (k) => ({
+        slug: k.name.slice(LINK_PREFIX.length),
+        ...JSON.parse((await env.LIKES.get(k.name)) || "{}"),
+      }))
+    );
+    links.sort((a, b) => (b.created || 0) - (a.created || 0));
+    return json({ links });
+  }
+  const body = await request.json().catch(() => ({}));
+  const slug = String(body.slug || "").trim().toLowerCase();
+  if (!SLUG_RE.test(slug)) return json({ error: "關鍵字只能用英文字母、數字、減號、底線（最多 40 字）" }, 400);
+  if (request.method === "DELETE") {
+    await env.LIKES.delete(LINK_PREFIX + slug);
+    return json({ ok: true });
+  }
+  if (request.method === "POST") {
+    let target;
+    try {
+      target = new URL(String(body.url || "").trim());
+      if (!["http:", "https:"].includes(target.protocol)) throw new Error();
+    } catch {
+      return json({ error: "原網址要以 http:// 或 https:// 開頭" }, 400);
+    }
+    const old = JSON.parse((await env.LIKES.get(LINK_PREFIX + slug)) || "{}");
+    await env.LIKES.put(
+      LINK_PREFIX + slug,
+      JSON.stringify({ url: target.href, clicks: old.clicks || 0, created: old.created || Date.now() })
+    );
+    return json({ ok: true, slug });
+  }
+  return json({ error: "method not allowed" }, 405);
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/admin-links") {
+      return new Response(ADMIN_HTML, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+    }
+    const sm = url.pathname.match(/^\/photo\/([^/]+)\/?$/);
+    if (sm) {
+      const key = LINK_PREFIX + decodeURIComponent(sm[1]).toLowerCase();
+      const raw = await env.LIKES.get(key);
+      if (!raw) return new Response("找不到這個短網址", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      const entry = JSON.parse(raw);
+      ctx.waitUntil(env.LIKES.put(key, JSON.stringify({ ...entry, clicks: (entry.clicks || 0) + 1 })).catch(() => {}));
+      return Response.redirect(entry.url, 302);
+    }
+
+    if (url.pathname === "/api/links") {
+      try {
+        return await handleLinks(request, env);
+      } catch (err) {
+        return json({ error: err.message }, 400);
+      }
+    }
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
     try {
       return await handleApi(request, env, url);
