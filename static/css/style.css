@@ -721,3 +721,12 @@ body.pseudo-fullscreen .lightbox-albums {
   font-weight: 600;
 }
 .photo-match-bar:hover { background: rgba(212, 175, 55, 0.28); }
+
+/* 手機：控制列自動換行，按鈕不被擠成直排 */
+.autoplay-controls { flex-wrap: wrap; padding: 0 12px; }
+.autoplay-btn, .contact-btn, .index-btn { white-space: nowrap; }
+@media (max-width: 640px) {
+  .autoplay-controls { gap: 8px; }
+  .autoplay-controls .autoplay-btn { flex: 1 1 40%; padding: 10px 12px; }
+  .autoplay-controls .autoplay-speed { flex: 1 1 40%; padding: 10px 12px; }
+}
