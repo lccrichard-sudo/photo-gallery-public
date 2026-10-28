@@ -169,9 +169,9 @@ async function loadPhotos() {
 
 function getLargeUrl(photo) {
   const quality = qualitySelect.value;
-  if (quality === "low") return photo.url_m || photo.url_c || photo.url_l || photo.url_s || photo.url_o;
+  if (quality === "low") return photo.url_c || photo.url_m || photo.url_l || photo.url_s || photo.url_o;
   if (quality === "high") return photo.url_o || photo.url_k || photo.url_h || photo.url_l || photo.url_c || photo.url_m;
-  return photo.url_c || photo.url_l || photo.url_h || photo.url_m || photo.url_o;
+  return photo.url_k || photo.url_h || photo.url_l || photo.url_c || photo.url_m || photo.url_o;
 }
 
 function openLightbox(index) {
