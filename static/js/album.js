@@ -1,3 +1,10 @@
+// ── 18X／18O：預設隱藏「人體藝術」相簿與其中的相片（同一次瀏覽內記住選擇）──
+const ADULT_ALBUM_KEY = "人體藝術";
+function adultOn() {
+  try { return sessionStorage.getItem("adult") === "1"; } catch { return false; }
+}
+function isAdultTitle(t) { return (t || "").includes(ADULT_ALBUM_KEY); }
+
 const params = new URLSearchParams(window.location.search);
 const albumId = params.get("id");
 const searchMode = albumId === "search";
@@ -153,7 +160,7 @@ async function loadPhotos() {
       return;
     }
 
-    photos = data.photo;
+    photos = albumId === "latest" ? data.photo.filter((ph) => adultOn() || !(ph.album_titles || []).some(isAdultTitle)) : data.photo;
     refreshPhotos();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
@@ -320,6 +327,11 @@ function prioritizeOrientation(list, mode) {
 }
 
 async function loadAllPhotos() {
+  const all = await loadAllPhotosRaw();
+  return adultOn() ? all : all.filter((ph) => !(ph.album_sets || []).some((s) => isAdultTitle(s.title)));
+}
+
+async function loadAllPhotosRaw() {
   if (allPhotosCache) return allPhotosCache;
   const albums = await (await fetch("/api/albums")).json();
   if (!Array.isArray(albums)) throw new Error(albums.error || "無法取得相簿清單");

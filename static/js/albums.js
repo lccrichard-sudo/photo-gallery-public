@@ -1,3 +1,10 @@
+// ── 18X／18O：預設隱藏「人體藝術」相簿與其中的相片（同一次瀏覽內記住選擇）──
+const ADULT_ALBUM_KEY = "人體藝術";
+function adultOn() {
+  try { return sessionStorage.getItem("adult") === "1"; } catch { return false; }
+}
+function isAdultTitle(t) { return (t || "").includes(ADULT_ALBUM_KEY); }
+
 let allAlbums = [];
 let tagsIndex = {};
 let latestPhotos = [];
@@ -24,18 +31,32 @@ async function loadAlbums() {
     }
 
     allAlbums = data;
-    const countEl = document.getElementById("album-count");
-    countEl.textContent = `共 ${allAlbums.length} 個相簿`;
     fetch("/api/photo_total")
       .then((r) => r.json())
-      .then((d) => {
-        if (d.total) countEl.textContent = `共 ${allAlbums.length} 個相簿、${d.total} 張相片`;
-      })
+      .then((d) => { photoTotal = d.total || 0; updateCounts(); })
       .catch(() => {});
+    updateCounts();
     refreshAlbums();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
   }
+}
+
+let photoTotal = 0;
+
+function visibleAlbums() {
+  return adultOn() ? allAlbums : allAlbums.filter((a) => !isAdultTitle(a.title._content));
+}
+
+function updateCounts() {
+  const countEl = document.getElementById("album-count");
+  const n = visibleAlbums().length;
+  countEl.textContent = photoTotal && adultOn() ? `共 ${n} 個相簿、${photoTotal} 張相片` : `共 ${n} 個相簿`;
+}
+
+function visiblePhoto(photo) {
+  if (adultOn()) return true;
+  return !(photo.albumTitles || photo.album_titles || []).some(isAdultTitle);
 }
 
 function getAlbumCover(album) {
@@ -73,9 +94,10 @@ function renderAlbums(albums, { showLatest = true } = {}) {
     return;
   }
 
-  if (showLatest && latestPhotos.length) {
+  const latestShown = latestPhotos.filter(visiblePhoto);
+  if (showLatest && latestShown.length) {
     const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近一次上傳的相片（至少 10 張），並標註所在相簿")}`;
-    const tiles = latestPhotos
+    const tiles = latestShown
       .map((photo) => {
         const thumb = photo.url_m || photo.url_c || photo.url_s;
         const albumsLine = (photo.album_titles || []).join("、");
@@ -89,9 +111,9 @@ function renderAlbums(albums, { showLatest = true } = {}) {
     const wrap = document.createElement("section");
     wrap.className = "latest-marquee";
     wrap.innerHTML = `
-      <a class="latest-heading" href="${href}">最新 <small>最近上傳的 ${latestPhotos.length} 張相片 ›</small></a>
+      <a class="latest-heading" href="${href}">最新 <small>最近上傳的 ${latestShown.length} 張相片 ›</small></a>
       <div class="latest-viewport">
-        <div class="latest-track" style="animation-duration: ${Math.max(40, latestPhotos.length * 6)}s">${tiles}${tiles}</div>
+        <div class="latest-track" style="animation-duration: ${Math.max(40, latestShown.length * 6)}s">${tiles}${tiles}</div>
       </div>
     `;
     grid.appendChild(wrap);
@@ -300,6 +322,7 @@ async function renderCalendar(terms) {
   }
   if (seq !== calendarSeq || viewMode !== "calendar") return;
 
+  photos = photos.filter(visiblePhoto);
   if (terms.length) photos = photos.filter((p) => terms.every((t) => photoText(p).includes(t)));
   calendarByMonth = groupPhotosByMonth(photos);
   calendarMonthKeys = [...calendarByMonth.keys()].sort().reverse();
@@ -358,7 +381,7 @@ async function updatePhotoMatchBar(terms) {
   try {
     const photos = await loadAllPhotosForSearch();
     if (seq !== photoMatchSeq) return;
-    const count = photos.filter((p) => {
+    const count = photos.filter(visiblePhoto).filter((p) => {
       const text = photoText(p);
       return terms.every((t) => text.includes(t));
     }).length;
@@ -378,8 +401,8 @@ async function updatePhotoMatchBar(terms) {
 function refreshAlbums() {
   const terms = searchInput.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matched = terms.length
-    ? allAlbums.filter((album) => terms.every((term) => matchAlbum(album, term)))
-    : allAlbums;
+    ? visibleAlbums().filter((album) => terms.every((term) => matchAlbum(album, term)))
+    : visibleAlbums();
   const sorted = sortAlbums(matched, sortSelect.value);
   if (viewMode === "calendar") renderCalendar(terms);
   else renderAlbums(sorted, { showLatest: !terms.length });
@@ -388,6 +411,16 @@ function refreshAlbums() {
 
 searchInput.addEventListener("input", refreshAlbums);
 sortSelect.addEventListener("change", refreshAlbums);
+
+const adultBtn = document.getElementById("adult-toggle-btn");
+function syncAdultBtn() { adultBtn.textContent = adultOn() ? "18O" : "18X"; }
+syncAdultBtn();
+adultBtn.addEventListener("click", () => {
+  try { sessionStorage.setItem("adult", adultOn() ? "0" : "1"); } catch {}
+  syncAdultBtn();
+  updateCounts();
+  refreshAlbums();
+});
 
 const viewToggleBtn = document.getElementById("view-toggle-btn");
 viewToggleBtn.addEventListener("click", () => {
