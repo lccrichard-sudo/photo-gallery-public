@@ -323,7 +323,7 @@ autoplayAllBtn.addEventListener("click", async () => {
     if (all.length === 0) return;
     stopAutoplay();
     playAllMode = true;
-    filteredPhotos = all;
+    filteredPhotos = sortPhotos(all, sortSelect.value);
     openLightbox(0);
     startAutoplay();
   } catch (err) {
