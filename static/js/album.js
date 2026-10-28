@@ -289,6 +289,20 @@ let playAllMode = false;
 let allPhotosCache = null;
 const autoplayAllBtn = document.getElementById("autoplay-all-btn");
 
+const orientationSelect = document.getElementById("orientation-select");
+
+function isPortrait(photo) {
+  return Number(photo.height_m || 0) > Number(photo.width_m || 0);
+}
+
+// 依方向把相片分成兩群（各群內維持原排序），指定的方向排前面
+function prioritizeOrientation(list, mode) {
+  if (mode !== "landscape" && mode !== "portrait") return list;
+  const first = [], rest = [];
+  list.forEach((p) => ((mode === "portrait") === isPortrait(p) ? first : rest).push(p));
+  return first.concat(rest);
+}
+
 async function loadAllPhotos() {
   if (allPhotosCache) return allPhotosCache;
   const albums = await (await fetch("/api/albums")).json();
@@ -323,7 +337,7 @@ autoplayAllBtn.addEventListener("click", async () => {
     if (all.length === 0) return;
     stopAutoplay();
     playAllMode = true;
-    filteredPhotos = sortPhotos(all, sortSelect.value);
+    filteredPhotos = prioritizeOrientation(sortPhotos(all, sortSelect.value), orientationSelect.value);
     openLightbox(0);
     startAutoplay();
   } catch (err) {
