@@ -2,8 +2,10 @@ const params = new URLSearchParams(window.location.search);
 const albumId = params.get("id");
 const searchMode = albumId === "search";
 const searchQuery = params.get("q") || "";
-const albumTitle = searchMode ? "搜尋結果" : params.get("title") || "相簿";
-const albumDesc = searchMode ? "跨全部相簿，符合條件的所有相片" : params.get("desc") || "";
+const dateMode = albumId === "date";
+const dateQuery = params.get("d") || "";
+const albumTitle = searchMode ? "搜尋結果" : dateMode ? `拍攝於 ${dateQuery}` : params.get("title") || "相簿";
+const albumDesc = searchMode ? "跨全部相簿，符合條件的所有相片" : dateMode ? "這一天拍攝的所有相片（跨全部相簿）" : params.get("desc") || "";
 
 document.getElementById("album-title").textContent = albumTitle;
 document.getElementById("album-desc").textContent = albumDesc;
@@ -55,7 +57,7 @@ function matchPhoto(photo, keyword) {
   const title = (photo.title || "").toLowerCase();
   const desc = ((photo.description && photo.description._content) || "").toLowerCase();
   if (title.includes(keyword) || desc.includes(keyword)) return true;
-  if (!searchMode) return false;
+  if (!searchMode && !dateMode) return false;
   const tags = (photo.tags || "").toLowerCase();
   const albums = (photo.album_sets || []).map((s) => s.title).join(" ").toLowerCase();
   return tags.includes(keyword) || albums.includes(keyword);
@@ -113,6 +115,17 @@ async function loadPhotos() {
 
   if (!albumId) {
     grid.innerHTML = `<p class="loading">找不到相簿 ID</p>`;
+    return;
+  }
+
+  if (dateMode) {
+    try {
+      const all = await loadAllPhotos();
+      photos = all.filter((p) => (p.datetaken || "").startsWith(dateQuery));
+      refreshPhotos();
+    } catch (err) {
+      grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
+    }
     return;
   }
 
