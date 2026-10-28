@@ -45,6 +45,9 @@ function renderPhotos() {
     const thumb = getThumbUrl(photo);
     const div = document.createElement("div");
     div.className = "photo-thumb";
+    const ratio = Number(photo.width_m) && Number(photo.height_m) ? Number(photo.width_m) / Number(photo.height_m) : 1.5;
+    div.style.flexGrow = ratio * 100;
+    div.style.flexBasis = `${ratio * 200}px`;
     const albumsLine = (photo.album_titles || []).join("、");
     div.innerHTML = `<img src="${thumb}" alt="${photo.title}" loading="lazy">` +
       (albumsLine ? `<span class="photo-album-label">${albumsLine}</span>` : "");
