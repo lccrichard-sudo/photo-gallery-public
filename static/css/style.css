@@ -889,3 +889,26 @@ body.calendar-active .site-header {
   color: #ffd54a;
   text-decoration: none;
 }
+
+/* 月曆：當天縮圖維持原比例（每列等高、自動填滿） */
+.calendar-day-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calendar-day-thumbs::after {
+  content: "";
+  flex-grow: 1000000;
+}
+
+.calendar-day-thumbs a {
+  display: block;
+  background: #222;
+}
+
+.calendar-day-thumbs img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

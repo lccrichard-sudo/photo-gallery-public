@@ -165,11 +165,13 @@ function showDayPhotos(year, month, day, dayPhotos, cellEl) {
   panel.innerHTML = `<h4 class="calendar-day-panel-title">${year} 年 ${month} 月 ${day} 日・${dayPhotos.length} 張相片
     <a class="calendar-day-panel-link" href="${href}">全部顯示 ›</a></h4>`;
   const list = document.createElement("div");
-  list.className = "photos-grid";
+  list.className = "calendar-day-thumbs";
   dayPhotos.slice(0, 60).forEach((photo) => {
     const a = document.createElement("a");
-    a.className = "photo-thumb";
     a.href = href;
+    const ratio = Number(photo.width_m) && Number(photo.height_m) ? Number(photo.width_m) / Number(photo.height_m) : 1.5;
+    a.style.flexGrow = ratio * 100;
+    a.style.flexBasis = `${ratio * 180}px`;
     a.innerHTML = `<img src="${photo.url_m || photo.url_c || photo.url_s}" alt="${photo.title || ""}" loading="lazy">`;
     list.appendChild(a);
   });
