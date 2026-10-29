@@ -112,7 +112,7 @@ function refreshPhotos() {
   const matched = terms.length
     ? photos.filter((photo) => terms.every((term) => matchPhoto(photo, term)))
     : photos;
-  filteredPhotos = sortPhotos(matched, sortSelect.value);
+  filteredPhotos = prioritizeOrientation(sortPhotos(matched, sortSelect.value), orientationSelect.value);
   renderPhotos();
   updatePhotoCount();
 }
@@ -374,6 +374,11 @@ autoplayAllBtn.addEventListener("click", async () => {
     autoplayAllBtn.disabled = false;
     autoplayAllBtn.textContent = "▶ 播放全部";
   }
+});
+
+orientationSelect.addEventListener("change", () => {
+  if (playAllMode || lightbox.classList.contains("active")) return;
+  refreshPhotos();
 });
 
 autoplaySpeedSelect.addEventListener("change", () => {
