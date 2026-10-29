@@ -321,12 +321,10 @@ function isPortrait(photo) {
   return Number(photo.height_m || 0) > Number(photo.width_m || 0);
 }
 
-// 依方向把相片分成兩群（各群內維持原排序），指定的方向排前面
+// 依方向篩選：landscape 只留橫幅、portrait 只留直幅，其他不篩
 function prioritizeOrientation(list, mode) {
   if (mode !== "landscape" && mode !== "portrait") return list;
-  const first = [], rest = [];
-  list.forEach((p) => ((mode === "portrait") === isPortrait(p) ? first : rest).push(p));
-  return first.concat(rest);
+  return list.filter((p) => (mode === "portrait") === isPortrait(p));
 }
 
 async function loadAllPhotos() {
@@ -366,9 +364,14 @@ autoplayAllBtn.addEventListener("click", async () => {
   try {
     const all = await loadAllPhotos();
     if (all.length === 0) return;
+    const picked = prioritizeOrientation(sortPhotos(all, sortSelect.value), orientationSelect.value);
+    if (picked.length === 0) {
+      alert("沒有符合方向的相片");
+      return;
+    }
     stopAutoplay();
     playAllMode = true;
-    filteredPhotos = prioritizeOrientation(sortPhotos(all, sortSelect.value), orientationSelect.value);
+    filteredPhotos = picked;
     openLightbox(0);
     startAutoplay();
   } catch (err) {
