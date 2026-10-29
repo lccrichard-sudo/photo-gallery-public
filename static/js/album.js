@@ -28,6 +28,8 @@ const lightboxDesc = document.getElementById("lightbox-desc");
 const lightboxTags = document.getElementById("lightbox-tags");
 const lightboxAlbums = document.getElementById("lightbox-albums");
 const qualitySelect = document.getElementById("quality-select");
+const captionSelect = document.getElementById("caption-select");
+const CAPTION_STORAGE_KEY = "photo-caption";
 const QUALITY_STORAGE_KEY = "photo-quality";
 
 function getThumbUrl(photo) {
@@ -193,10 +195,11 @@ function showCurrentPhoto() {
   lightboxImg.src = getLargeUrl(photo);
   lightboxImg.alt = photo.title;
   const desc = (photo.description && photo.description._content) || "";
+  const showCaption = captionSelect.value !== "hide";
   lightboxDesc.textContent = desc;
-  lightboxDesc.style.display = desc ? "block" : "none";
+  lightboxDesc.style.display = desc && showCaption ? "block" : "none";
 
-  if (photo.album_sets) {
+  if (photo.album_sets && showCaption) {
     const links = photo.album_sets
       .map((set) => `<a href="album.html?id=${set.id}&title=${encodeURIComponent(set.title)}">${set.title}</a>`)
       .join("、");
@@ -208,7 +211,7 @@ function showCurrentPhoto() {
 
   const tags = (photo.tags || "").split(/\s+/).filter(Boolean);
   lightboxTags.innerHTML = tags.map((tag) => `<span class="tag-chip">${tag}</span>`).join("");
-  lightboxTags.style.display = tags.length ? "flex" : "none";
+  lightboxTags.style.display = tags.length && showCaption ? "flex" : "none";
 }
 
 function showPrev() {
@@ -444,6 +447,14 @@ qualitySelect.addEventListener("change", () => {
   localStorage.setItem(QUALITY_STORAGE_KEY, qualitySelect.value);
   if (lightbox.classList.contains("active")) showCurrentPhoto();
 });
+
+captionSelect.addEventListener("change", () => {
+  localStorage.setItem(CAPTION_STORAGE_KEY, captionSelect.value);
+  if (lightbox.classList.contains("active")) showCurrentPhoto();
+});
+
+const savedCaption = localStorage.getItem(CAPTION_STORAGE_KEY);
+if (savedCaption) captionSelect.value = savedCaption;
 
 const savedQuality = localStorage.getItem(QUALITY_STORAGE_KEY);
 if (savedQuality) qualitySelect.value = savedQuality;
