@@ -8,16 +8,22 @@ function isAdultTitle(t) { return (t || "").includes(ADULT_ALBUM_KEY); }
 let allAlbums = [];
 let tagsIndex = {};
 let latestPhotos = [];
+let randomPhotos = [];   // 「最多人按讚」先停用（後端 /api/album/top 仍保留），改為隨機
 
 async function loadAlbums() {
   const grid = document.getElementById("albums-grid");
 
   try {
-    const [albumsRes, indexRes, latestRes] = await Promise.all([
+    const [albumsRes, indexRes, latestRes, topRes] = await Promise.all([
       fetch("/api/albums"),
       fetch("/api/search_index"),
       fetch("/api/album/latest/photos").catch(() => null),
+      fetch("/api/album/random/photos", { cache: "no-store" }).catch(() => null),
     ]);
+    try {
+      const rnd = topRes && (await topRes.json());
+      if (rnd && rnd.photo) randomPhotos = rnd.photo;
+    } catch {}
     try {
       const latest = latestRes && (await latestRes.json());
       if (latest && latest.photo) latestPhotos = latest.photo;
@@ -33,7 +39,7 @@ async function loadAlbums() {
     allAlbums = data;
     fetch("/api/photo_total")
       .then((r) => r.json())
-      .then((d) => { photoTotal = d.total || 0; updateCounts(); })
+      .then((d) => { photoTotal = d.total || 0; photoVisible = d.visible || 0; updateCounts(); })
       .catch(() => {});
     updateCounts();
     refreshAlbums();
@@ -43,6 +49,7 @@ async function loadAlbums() {
 }
 
 let photoTotal = 0;
+let photoVisible = 0;
 
 function visibleAlbums() {
   return adultOn() ? allAlbums : allAlbums.filter((a) => !isAdultTitle(a.title._content));
@@ -51,7 +58,8 @@ function visibleAlbums() {
 function updateCounts() {
   const countEl = document.getElementById("album-count");
   const n = visibleAlbums().length;
-  countEl.textContent = photoTotal && adultOn() ? `共 ${n} 個相簿、${photoTotal} 張相片` : `共 ${n} 個相簿`;
+  const photos = adultOn() ? photoTotal : photoVisible;
+  countEl.textContent = photos ? `共 ${n} 個相簿、${photos} 張相片` : `共 ${n} 個相簿`;
 }
 
 function visiblePhoto(photo) {
@@ -84,6 +92,30 @@ function buildAlbumCard(album) {
   return card;
 }
 
+function buildMarquee(heading, sub, href, list, badge, tileHref) {
+  const tiles = list
+    .map((photo) => {
+      const tHref = tileHref ? tileHref(photo) : href;
+      const thumb = photo.url_m || photo.url_c || photo.url_s;
+      const albumsLine = (photo.album_titles || []).join("、");
+      return `<a class="latest-tile" href="${tHref}" title="${albumsLine}">
+        <img src="${thumb}" alt="${photo.title}" loading="lazy">
+        ${badge ? `<span class="tile-likes">${badge(photo)}</span>` : ""}
+        ${albumsLine ? `<span class="photo-album-label">${albumsLine}</span>` : ""}
+      </a>`;
+    })
+    .join("");
+  const wrap = document.createElement("section");
+  wrap.className = "latest-marquee";
+  wrap.innerHTML = `
+    ${href ? `<a class="latest-heading" href="${href}">${heading} <small>${sub}</small></a>` : `<span class="latest-heading">${heading} <small>${sub}</small></span>`}
+    <div class="latest-viewport">
+      <div class="latest-track" style="animation-duration: ${Math.max(40, list.length * 6)}s">${tiles}${tiles}</div>
+    </div>
+  `;
+  return wrap;
+}
+
 function renderAlbums(albums, { showLatest = true } = {}) {
   const grid = document.getElementById("albums-grid");
   grid.classList.remove("calendar-mode");
@@ -94,29 +126,20 @@ function renderAlbums(albums, { showLatest = true } = {}) {
     return;
   }
 
-  const latestShown = latestPhotos.filter(visiblePhoto);
-  if (showLatest && latestShown.length) {
-    const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近一次上傳的相片（至少 10 張），並標註所在相簿")}`;
-    const tiles = latestShown
-      .map((photo) => {
-        const thumb = photo.url_m || photo.url_c || photo.url_s;
-        const albumsLine = (photo.album_titles || []).join("、");
-        return `<a class="latest-tile" href="${href}" title="${albumsLine}">
-          <img src="${thumb}" alt="${photo.title}" loading="lazy">
-          ${albumsLine ? `<span class="photo-album-label">${albumsLine}</span>` : ""}
-        </a>`;
-      })
-      .join("");
-
-    const wrap = document.createElement("section");
-    wrap.className = "latest-marquee";
-    wrap.innerHTML = `
-      <a class="latest-heading" href="${href}">最新 <small>最近上傳的 ${latestShown.length} 張相片 ›</small></a>
-      <div class="latest-viewport">
-        <div class="latest-track" style="animation-duration: ${Math.max(40, latestShown.length * 6)}s">${tiles}${tiles}</div>
-      </div>
-    `;
-    grid.appendChild(wrap);
+  if (showLatest) {
+    const latestShown = latestPhotos.filter(visiblePhoto);
+    if (latestShown.length) {
+      const href = `album.html?id=latest&title=${encodeURIComponent("最新")}&desc=${encodeURIComponent("最近 72 小時內上傳的相片（不足 10 張則補到 10 張），並標註所在相簿")}`;
+      grid.appendChild(buildMarquee("最新", `最近上傳的 ${latestShown.length} 張相片 ›`, href, latestShown));
+    }
+    const randomShown = randomPhotos.filter(visiblePhoto).slice(0, 12);
+    if (randomShown.length) {
+      const tileHref = (p) => {
+        const set = (p.album_sets || [])[0];
+        return set ? `album.html?id=${set.id}&title=${encodeURIComponent(set.title)}` : "#";
+      };
+      grid.appendChild(buildMarquee("隨機", `隨機挑 ${randomShown.length} 張，重新整理會換一批`, "", randomShown, null, tileHref));
+    }
   }
 
   albums.forEach((album) => grid.appendChild(buildAlbumCard(album)));

@@ -95,6 +95,69 @@ async function getLatestPhotos(env) {
   return { photo: photos };
 }
 
+// 隨機：從所有相簿的公開相片隨機抽（多回傳一些，讓前端隱藏人體藝術後仍湊得滿 12 張）
+const RANDOM_COUNT = 40;
+async function getRandomPhotos(env) {
+  const albums = await getAllAlbums(env);
+  const sets = await Promise.all(
+    albums.map((a) => getAlbumPhotos(env, a.id).then((s) => ({ a, s })).catch(() => null))
+  );
+  const byId = new Map();
+  for (const item of sets) {
+    if (!item) continue;
+    for (const p of item.s.photo) {
+      if (!byId.has(p.id)) byId.set(p.id, { ...p, album_titles: [], album_sets: [] });
+      const e = byId.get(p.id);
+      e.album_titles.push(item.a.title._content);
+      e.album_sets.push({ id: item.a.id, title: item.a.title._content });
+    }
+  }
+  const all = [...byId.values()];
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return { photo: all.slice(0, RANDOM_COUNT) };
+}
+
+// 最多人按讚：讚數放在 KV 的 metadata，一次 list 就拿到，不必逐張讀取
+const TOP_LIKED_COUNT = 20;
+async function getTopLikedPhotos(env) {
+  const counts = new Map();
+  let cursor;
+  do {
+    const page = await env.LIKES.list({ cursor });
+    for (const k of page.keys) {
+      if (!/^\d+$/.test(k.name)) continue;
+      let n = k.metadata && k.metadata.count;
+      if (n === undefined && counts.size < 15) n = (await loadLikes(env, k.name)).count;
+      if (n > 0) counts.set(k.name, n);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+
+  const albums = await getAllAlbums(env);
+  const sets = await Promise.all(
+    albums.map((a) => getAlbumPhotos(env, a.id).then((s) => ({ a, s })).catch(() => null))
+  );
+  const byId = new Map();
+  for (const item of sets) {
+    if (!item) continue;
+    for (const p of item.s.photo) {
+      if (!byId.has(p.id)) byId.set(p.id, { ...p, album_titles: [], album_sets: [] });
+      const e = byId.get(p.id);
+      e.album_titles.push(item.a.title._content);
+      e.album_sets.push({ id: item.a.id, title: item.a.title._content });
+    }
+  }
+  const photos = [...counts.entries()]
+    .filter(([id]) => byId.has(id))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, TOP_LIKED_COUNT)
+    .map(([id, likes]) => ({ ...byId.get(id), likes }));
+  return { photo: photos };
+}
+
 // 搜尋索引：即時由 Flickr 組出（標籤＋說明＋本機補充說明），失敗時退回打包的舊索引
 async function buildSearchIndex(env) {
   const albums = await getAllAlbums(env);
@@ -146,7 +209,26 @@ async function handleApi(request, env, url) {
       per_page: 1,
     });
     if (data.stat !== "ok") throw new Error(data.message);
-    return json({ total: Number(data.photos.total) });
+    // visible：18X 狀態看得到的張數（不重複，排除只要放進人體藝術相簿的相片）
+    let visible = null;
+    try {
+      const albums = await getAllAlbums(env);
+      const sets = await Promise.all(
+        albums.map((a) => getAlbumPhotos(env, a.id, "").then((s) => ({ a, s })).catch(() => null))
+      );
+      const all = new Set();
+      const adult = new Set();
+      for (const item of sets) {
+        if (!item) continue;
+        const isAdult = item.a.title._content.includes("人體藝術");
+        for (const p of item.s.photo) {
+          all.add(p.id);
+          if (isAdult) adult.add(p.id);
+        }
+      }
+      visible = all.size - adult.size;
+    } catch {}
+    return json({ total: Number(data.photos.total), visible });
   }
 
   if (path === "/api/search_index") {
@@ -159,8 +241,11 @@ async function handleApi(request, env, url) {
 
   let m = path.match(/^\/api\/album\/([^/]+)\/photos$/);
   if (m) {
-    const data = m[1] === "latest" ? await getLatestPhotos(env) : await getAlbumPhotos(env, m[1]);
-    return json(data);
+    const data = m[1] === "latest" ? await getLatestPhotos(env)
+      : m[1] === "top" ? await getTopLikedPhotos(env)
+      : m[1] === "random" ? await getRandomPhotos(env)
+      : await getAlbumPhotos(env, m[1]);
+    return json(data, 200, m[1] === "random" ? { "Cache-Control": "no-store" } : {});
   }
 
   m = path.match(/^\/api\/likes\/([^/]+)$/);
@@ -179,7 +264,7 @@ async function handleApi(request, env, url) {
         entry.count += 1;
         liked = true;
       }
-      await env.LIKES.put(photoId, JSON.stringify(entry));
+      await env.LIKES.put(photoId, JSON.stringify(entry), { metadata: { count: entry.count } });
       return json({ count: entry.count, liked });
     }
     return json({ count: entry.count, liked_by_ip: entry.ips.includes(ipHash) });

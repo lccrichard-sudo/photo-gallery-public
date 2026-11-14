@@ -214,6 +214,7 @@ def api_search_index():
     return jsonify({})
 
 
+LATEST_HOURS = 72
 LATEST_MIN_COUNT = 10
 LATEST_FETCH = 500
 LATEST_TTL = 600
@@ -243,7 +244,7 @@ def add_album_titles(photo):
 
 
 def get_latest_photos():
-    """最近一次上傳（台北時間同一天）的公開相片，不足 10 張就補到 10 張，並附上所在相簿名稱。"""
+    """最近 LATEST_HOURS（72）小時內上傳的公開相片；不足 10 張就補到 10 張，並附上所在相簿名稱。"""
     now = time.time()
     if latest_cache["data"] and now - latest_cache["at"] < LATEST_TTL:
         return latest_cache["data"]
@@ -264,13 +265,10 @@ def get_latest_photos():
     if data.get("stat") != "ok":
         raise RuntimeError(data.get("message"))
 
+    cutoff = now - LATEST_HOURS * 3600
     all_photos = data["photos"]["photo"]
-    if all_photos:
-        newest_day = upload_day(all_photos[0])
-        last_batch = [p for p in all_photos if upload_day(p) == newest_day]
-    else:
-        last_batch = []
-    photos = last_batch if len(last_batch) > LATEST_MIN_COUNT else all_photos[:LATEST_MIN_COUNT]
+    recent = [p for p in all_photos if int(p["dateupload"]) >= cutoff]
+    photos = recent if len(recent) >= LATEST_MIN_COUNT else all_photos[:LATEST_MIN_COUNT]
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(add_album_titles, photos))

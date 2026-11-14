@@ -53,6 +53,7 @@
         <option value="hide">不顯示說明</option>
       </select>
       <button id="fullscreen-btn" class="autoplay-btn">⛶ 全螢幕</button>
+      <button id="lang-btn" class="autoplay-btn" data-no-i18n>EN</button>
       <button id="contact-btn" class="contact-btn">✉ 聯絡我</button>
     </div>
   </header>
@@ -65,16 +66,16 @@
 
   <div id="lightbox" class="lightbox">
     <button class="lightbox-close" id="lightbox-close">✕</button>
+    <div class="lightbox-like-wrap">
+      <button id="lightbox-like-btn" class="like-btn" title="按讚">♡</button>
+      <span id="like-count" class="like-count">0</span>
+    </div>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev">‹</button>
     <div class="lightbox-content">
       <img id="lightbox-img" src="" alt="">
       <p id="lightbox-desc" class="lightbox-desc"></p>
       <div id="lightbox-albums" class="lightbox-albums"></div>
       <div id="lightbox-tags" class="lightbox-tags"></div>
-      <div class="lightbox-like-wrap">
-        <button id="lightbox-like-btn" class="like-btn" title="按讚">♡</button>
-        <span id="like-count" class="like-count">0</span>
-      </div>
     </div>
     <button class="lightbox-nav lightbox-next" id="lightbox-next">›</button>
     <button class="lightbox-autoplay" id="lightbox-autoplay-btn">▶</button>
@@ -99,5 +100,6 @@
 
   <script src="js/album.js"></script>
   <script src="js/contact.js"></script>
+  <script src="js/i18n.js?v=1"></script>
 </body>
 </html>

@@ -162,7 +162,7 @@ async function loadPhotos() {
       return;
     }
 
-    photos = albumId === "latest" ? data.photo.filter((ph) => adultOn() || !(ph.album_titles || []).some(isAdultTitle)) : data.photo;
+    photos = albumId === "latest" || albumId === "top" ? data.photo.filter((ph) => adultOn() || !(ph.album_titles || []).some(isAdultTitle)) : data.photo;
     refreshPhotos();
   } catch (err) {
     grid.innerHTML = `<p class="loading">載入失敗：${err.message}</p>`;
@@ -366,7 +366,7 @@ autoplayAllBtn.addEventListener("click", async () => {
     if (all.length === 0) return;
     const picked = prioritizeOrientation(sortPhotos(all, sortSelect.value), orientationSelect.value);
     if (picked.length === 0) {
-      alert("沒有符合方向的相片");
+      alert((window.t || ((x) => x))("沒有符合方向的相片"));
       return;
     }
     stopAutoplay();
@@ -375,7 +375,7 @@ autoplayAllBtn.addEventListener("click", async () => {
     openLightbox(0);
     startAutoplay();
   } catch (err) {
-    alert(`載入失敗：${err.message}`);
+    alert((window.t || ((x) => x))(`載入失敗：${err.message}`));
   } finally {
     autoplayAllBtn.disabled = false;
     autoplayAllBtn.textContent = "▶ 播放全部";

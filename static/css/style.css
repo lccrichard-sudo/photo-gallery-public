@@ -329,6 +329,17 @@ main.full-width {
   transition: transform 0.3s ease;
 }
 
+.tile-likes {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ff6b81;
+  font-size: 0.85rem;
+}
+
 .latest-tile:hover img {
   transform: scale(1.04);
 }
@@ -542,10 +553,17 @@ body.pseudo-fullscreen .lightbox-albums {
 }
 
 .lightbox-like-wrap {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .like-btn {
@@ -588,8 +606,7 @@ body.pseudo-fullscreen .lightbox-albums {
 
 .lightbox-autoplay {
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 10px;
   font-size: 1.6rem;
 }
 
