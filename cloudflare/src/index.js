@@ -4,6 +4,7 @@ import photoDescriptions from "../../photo_descriptions.json";
 const API_URL = "https://api.flickr.com/services/rest/";
 const PHOTO_EXTRAS = "url_s,url_m,url_c,url_l,url_h,url_k,url_o,description,tags,date_taken,date_upload";
 
+const LATEST_HOURS = 72;
 const LATEST_MIN_COUNT = 10;
 const LATEST_FETCH = 500;
 const TAIPEI_OFFSET = 8 * 3600;
@@ -58,7 +59,7 @@ async function getAlbumPhotos(env, albumId, extras = PHOTO_EXTRAS) {
 
 const uploadDay = (photo) => Math.floor((Number(photo.dateupload) + TAIPEI_OFFSET) / 86400);
 
-// 最近一次上傳（台北時間同一天）的公開相片，不足 10 張補到 10 張，並附上所在相簿。
+// 最近 72 小時內上傳的公開相片，不足 10 張補到 10 張，並附上所在相簿。
 // 所在相簿改用「各相簿的相片清單」反查，subrequest 數固定（相簿數+1），不受張數影響。
 async function getLatestPhotos(env) {
   const data = await flickr(env, "flickr.people.getPublicPhotos", {
@@ -69,8 +70,9 @@ async function getLatestPhotos(env) {
   if (data.stat !== "ok") throw new Error(data.message);
 
   const all = data.photos.photo;
-  const lastBatch = all.length ? all.filter((p) => uploadDay(p) === uploadDay(all[0])) : [];
-  const photos = lastBatch.length > LATEST_MIN_COUNT ? lastBatch : all.slice(0, LATEST_MIN_COUNT);
+  const cutoff = Date.now() / 1000 - LATEST_HOURS * 3600;
+  const recent = all.filter((p) => Number(p.dateupload) >= cutoff);
+  const photos = recent.length >= LATEST_MIN_COUNT ? recent : all.slice(0, LATEST_MIN_COUNT);
   const wanted = new Set(photos.map((p) => p.id));
 
   const albums = await getAllAlbums(env);
